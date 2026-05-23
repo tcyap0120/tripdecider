@@ -110,7 +110,9 @@ export default function DestinationsPage() {
   }
 
   function openAdd() {
-    setEditing(null); setForm(empty()); setGalleryQueue([]); setError(''); setShowForm(true)
+    // Only reset form when switching from edit mode; preserve draft when re-opening add
+    if (editing !== null) { setForm(empty()); setGalleryQueue([]) }
+    setEditing(null); setError(''); setShowForm(true)
   }
 
   function openEdit(dest: Destination) {
@@ -154,7 +156,7 @@ export default function DestinationsPage() {
       }
     }
 
-    await load(); setShowForm(false); setSaving(false); setSaveProgress(''); setGalleryQueue([])
+    await load(); setShowForm(false); setSaving(false); setSaveProgress(''); setGalleryQueue([]); setForm(empty()); setEditing(null)
   }
 
   async function handleDelete(id: string) {
@@ -421,7 +423,10 @@ export default function DestinationsPage() {
               )}
 
               <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors">Cancel</button>
+                <button type="button" onClick={() => setShowForm(false)} className="py-2.5 px-4 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors">Close</button>
+                {!editing && (
+                  <button type="button" onClick={() => { setForm(empty()); setGalleryQueue([]) }} className="py-2.5 px-4 border border-red-200 text-red-500 rounded-xl font-medium hover:bg-red-50 transition-colors text-sm">Clear</button>
+                )}
                 <button type="submit" disabled={saving || uploadingMain || processingFiles} className="flex-1 btn-primary justify-center py-2.5">
                   {saving
                     ? <><span className="animate-spin">⏳</span> {saveProgress || 'Saving...'}</>

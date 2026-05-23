@@ -68,6 +68,7 @@ export default function DestinationsPage() {
   const mainFileRef = useRef<HTMLInputElement>(null)
   const multiFileRef = useRef<HTMLInputElement>(null)
   const galleryFileRef = useRef<HTMLInputElement>(null)
+  const mouseDownTarget = useRef<EventTarget | null>(null)
 
   async function load() {
     const res = await fetch('/api/admin/destinations')
@@ -265,7 +266,8 @@ export default function DestinationsPage() {
       {/* ── ADD / EDIT MODAL ── */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false) }}>
+          onMouseDown={(e) => { mouseDownTarget.current = e.target }}
+          onClick={(e) => { if (e.target === e.currentTarget && mouseDownTarget.current === e.currentTarget) setShowForm(false) }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
               <h3 className="text-xl font-display font-bold text-slate-800">{editing ? '✏️ Edit Destination' : '➕ Add Destination'}</h3>
@@ -434,7 +436,8 @@ export default function DestinationsPage() {
       {/* ── GALLERY MODAL ── */}
       {galleryDest && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setGalleryDest(null) }}>
+          onMouseDown={(e) => { mouseDownTarget.current = e.target }}
+          onClick={(e) => { if (e.target === e.currentTarget && mouseDownTarget.current === e.currentTarget) setGalleryDest(null) }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <div>

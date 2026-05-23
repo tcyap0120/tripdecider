@@ -49,8 +49,7 @@ export default function LoginPage() {
 
         {/* Login card */}
         <div className="glass-card p-8">
-          <h2 className="text-2xl font-display font-bold text-slate-800 mb-1">Welcome back!</h2>
-          <p className="text-slate-500 mb-6">Enter your credentials to start voting</p>
+          <h2 className="text-2xl font-display font-bold text-slate-800 mb-6">Welcome back!</h2>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>

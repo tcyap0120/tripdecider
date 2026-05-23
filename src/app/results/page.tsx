@@ -9,7 +9,6 @@ interface DestResult {
   description: string
   accommodationPrice: number
   otherPrice: number
-  currency: string
   photoUrl: string
   link?: string
   tags: string[]
@@ -156,7 +155,7 @@ export default function ResultsPage() {
                         {winner.voteCount} vote{winner.voteCount !== 1 ? 's' : ''} ({Math.round((winner.voteCount / totalVotes) * 100)}%)
                       </span>
                       <span className="text-white/80 text-sm">·</span>
-                      <span className="text-white/80 text-sm">{winner.currency} {((winner.accommodationPrice + winner.otherPrice) / 8).toLocaleString(undefined, { maximumFractionDigits: 0 })}/pax (8)</span>
+                      <span className="text-white/80 text-sm">MYR {((winner.accommodationPrice + winner.otherPrice) / 8).toLocaleString(undefined, { maximumFractionDigits: 0 })}/pax (8)</span>
                     </div>
                   </div>
                 </div>
@@ -201,7 +200,7 @@ export default function ResultsPage() {
                         {[6, 8, 10].map((pax) => (
                           <div key={pax} className="bg-sky-50 border border-sky-100 rounded-lg px-2 py-0.5 text-center">
                             <div className="text-xs text-slate-400">{pax} pax</div>
-                            <div className="text-xs font-bold text-sky-700">{dest.currency} {((dest.accommodationPrice + dest.otherPrice) / pax).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                            <div className="text-xs font-bold text-sky-700">MYR {((dest.accommodationPrice + dest.otherPrice) / pax).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
                           </div>
                         ))}
                       </div>

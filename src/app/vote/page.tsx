@@ -14,7 +14,6 @@ interface Destination {
   description: string
   accommodationPrice: number
   otherPrice: number
-  currency: string
   photoUrl: string
   link?: string
   details: string
@@ -322,14 +321,14 @@ export default function VotePage() {
                           <div key={pax} className="bg-gradient-to-br from-sky-50 to-cyan-50 border border-sky-100 rounded-xl p-2 text-center">
                             <div className="text-xs text-slate-500 font-medium">{pax} pax</div>
                             <div className="text-sm font-display font-bold text-sky-700 leading-tight">
-                              {dest.currency} {perPax.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                              MYR {perPax.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </div>
                           </div>
                         )
                       })}
                     </div>
                     <p className="text-xs text-slate-400 mt-1.5 text-center leading-tight">
-                      🏨 {dest.currency} {dest.accommodationPrice.toLocaleString()} + ✈️ {dest.currency} {dest.otherPrice.toLocaleString()}
+                      🏨 MYR {dest.accommodationPrice.toLocaleString()} + ✈️ MYR {dest.otherPrice.toLocaleString()}
                     </p>
                   </div>
 

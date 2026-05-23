@@ -136,6 +136,8 @@ export default function DestinationsPage() {
       tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
     }
 
+    if (!form.name.trim()) { setError('Destination name is required'); setSaving(false); return }
+
     const url = editing ? `/api/admin/destinations/${editing.id}` : '/api/admin/destinations'
     const res = await fetch(url, { method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     if (!res.ok) { const d = await res.json(); setError(d.error || 'Failed to save'); setSaving(false); return }
@@ -280,7 +282,7 @@ export default function DestinationsPage() {
               {/* Name */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Destination Name *</label>
-                <input className="input-field" placeholder="e.g. Bali, Indonesia" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                <input className="input-field" placeholder="e.g. Bali, Indonesia" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
 
               {/* Prices */}
@@ -317,7 +319,7 @@ export default function DestinationsPage() {
 
               {/* Cover photo */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Cover Photo *</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Cover Photo</label>
                 <div className="flex gap-2 mb-1.5">
                   <input className="input-field"
                     placeholder={form.photoUrl.startsWith('data:') ? '📷 File uploaded' : 'Paste image URL or upload →'}
@@ -392,8 +394,8 @@ export default function DestinationsPage() {
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Short Description *</label>
-                <textarea className="input-field" rows={2} placeholder="A beautiful tropical paradise..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Short Description</label>
+                <textarea className="input-field" rows={2} placeholder="A beautiful tropical paradise..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
 
               {/* Details */}
@@ -405,7 +407,7 @@ export default function DestinationsPage() {
               {/* Link + Tags */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Booking Link (optional)</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Info Link</label>
                   <input className="input-field" placeholder="https://..." value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} />
                 </div>
                 <div>
@@ -430,7 +432,7 @@ export default function DestinationsPage() {
                 <button type="submit" disabled={saving || uploadingMain || processingFiles} className="flex-1 btn-primary justify-center py-2.5">
                   {saving
                     ? <><span className="animate-spin">⏳</span> {saveProgress || 'Saving...'}</>
-                    : editing ? '✅ Save Changes' : `➕ Add${galleryQueue.length > 0 ? ` + ${galleryQueue.length} photo${galleryQueue.length !== 1 ? 's' : ''}` : ''}`}
+                    : editing ? '✅ Save Changes' : '✅ Create Destination'}
                 </button>
               </div>
             </form>

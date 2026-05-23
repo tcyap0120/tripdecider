@@ -33,18 +33,18 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { name, description, accommodationPrice, otherPrice, currency, photoUrl, link, details, tags } = body
 
-  if (!name || !description || !photoUrl) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  if (!name) {
+    return NextResponse.json({ error: 'Destination name is required' }, { status: 400 })
   }
 
   const destination = await prisma.destination.create({
     data: {
       name,
-      description,
+      description: description || '',
       accommodationPrice: parseFloat(accommodationPrice) || 0,
       otherPrice: parseFloat(otherPrice) || 0,
       currency: currency || 'MYR',
-      photoUrl,
+      photoUrl: photoUrl || '',
       link: link || null,
       details: details || '',
       tags: Array.isArray(tags) ? tags.join(',') : (tags || ''),

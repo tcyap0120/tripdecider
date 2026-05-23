@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Destination {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  currency    String   @default("MYR")
+  photoUrl    String
+  link        String?
+  details     String
+  tags        String   @default("")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  votes       Vote[]
+}
+
+model Participant {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  voteCount    Int      @default(1)
+  createdAt    DateTime @default(now())
+  votes        Vote[]
+  messages     Message[]
+}
+
+model Vote {
+  id            String      @id @default(cuid())
+  participantId String
+  destinationId String
+  createdAt     DateTime    @default(now())
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@unique([participantId, destinationId])
+}
+
+model Settings {
+  key   String @id
+  value String
+}
+
+model Message {
+  id            String      @id @default(cuid())
+  participantId String
+  username      String
+  content       String
+  destinationId String?
+  createdAt     DateTime    @default(now())
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+}

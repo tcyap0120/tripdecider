@@ -13,7 +13,7 @@ export async function GET() {
 
   const destinations = await prisma.destination.findMany({
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-    include: { _count: { select: { votes: true } } },
+    include: { _count: { select: { votes: true } }, media: { orderBy: { createdAt: 'asc' } } },
   })
 
   let votedIds: string[] = []
@@ -38,6 +38,7 @@ export async function GET() {
       tags: d.tags ? d.tags.split(',').filter(Boolean) : [],
       voteCount: d._count.votes,
       hasVoted: votedIds.includes(d.id),
+      media: d.media.map((m) => ({ id: m.id, photoUrl: m.photoUrl, caption: m.caption })),
     }))
   )
 }

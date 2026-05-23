@@ -8,26 +8,36 @@ datasource db {
 }
 
 model Destination {
-  id          String   @id @default(cuid())
+  id          String             @id @default(cuid())
   name        String
   description String
   price       Float
-  currency    String   @default("MYR")
+  currency    String             @default("MYR")
   photoUrl    String
   link        String?
   details     String
-  tags        String   @default("")
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
+  tags        String             @default("")
+  order       Int                @default(0)
+  createdAt   DateTime           @default(now())
   votes       Vote[]
+  media       DestinationMedia[]
+}
+
+model DestinationMedia {
+  id            String      @id @default(cuid())
+  destinationId String
+  photoUrl      String
+  caption       String      @default("")
+  createdAt     DateTime    @default(now())
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
 }
 
 model Participant {
-  id           String   @id @default(cuid())
-  username     String   @unique
+  id           String    @id @default(cuid())
+  username     String    @unique
   passwordHash String
-  voteCount    Int      @default(1)
-  createdAt    DateTime @default(now())
+  voteCount    Int       @default(1)
+  createdAt    DateTime  @default(now())
   votes        Vote[]
   messages     Message[]
 }

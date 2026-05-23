@@ -2,6 +2,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface MediaItem {
+  id: string
+  photoUrl: string
+  caption: string
+}
+
 interface Destination {
   id: string
   name: string
@@ -14,6 +20,7 @@ interface Destination {
   tags: string[]
   voteCount: number
   hasVoted: boolean
+  media: MediaItem[]
 }
 
 interface UserInfo {
@@ -317,17 +324,38 @@ export default function VotePage() {
 
                   <p className="text-slate-600 text-sm leading-relaxed mb-3">{dest.description}</p>
 
-                  {dest.details && (
+                  {(dest.details || dest.media.length > 0) && (
                     <div className="mb-3">
                       <button
                         onClick={() => setExpandedId(expandedId === dest.id ? null : dest.id)}
-                        className="text-sky-500 text-xs font-medium hover:text-sky-700 transition-colors"
+                        className="text-sky-500 text-xs font-medium hover:text-sky-700 transition-colors flex items-center gap-1"
                       >
-                        {expandedId === dest.id ? '▲ Less' : '▼ More info'}
+                        {expandedId === dest.id ? '▲ Less' : `▼ More info${dest.media.length > 0 ? ` · 📸 ${dest.media.length}` : ''}`}
                       </button>
                       {expandedId === dest.id && (
-                        <div className="mt-2 text-sm text-slate-600 bg-slate-50 rounded-xl p-3 leading-relaxed animate-fade-in">
-                          {dest.details}
+                        <div className="mt-2 animate-fade-in space-y-3">
+                          {dest.details && (
+                            <div className="text-sm text-slate-600 bg-slate-50 rounded-xl p-3 leading-relaxed">
+                              {dest.details}
+                            </div>
+                          )}
+                          {dest.media.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-slate-500 mb-2">📸 Gallery</p>
+                              <div className="grid grid-cols-2 gap-2">
+                                {dest.media.map((item) => (
+                                  <div key={item.id} className="rounded-xl overflow-hidden border border-slate-100">
+                                    <img src={item.photoUrl} alt={item.caption || dest.name}
+                                      className="w-full h-24 object-cover"
+                                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                    {item.caption && (
+                                      <p className="text-xs text-slate-500 px-2 py-1 truncate">{item.caption}</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

@@ -14,6 +14,7 @@ interface DestResult {
   tags: string[]
   voteCount: number
   hasVoted: boolean
+  media: { id: string; photoUrl: string; caption: string }[]
 }
 
 interface Settings {

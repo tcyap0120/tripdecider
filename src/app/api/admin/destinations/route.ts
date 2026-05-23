@@ -15,7 +15,7 @@ export async function GET() {
 
   const destinations = await prisma.destination.findMany({
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-    include: { _count: { select: { votes: true } } },
+    include: { _count: { select: { votes: true } }, media: { orderBy: { createdAt: 'asc' } } },
   })
 
   return NextResponse.json(

@@ -11,8 +11,9 @@ model Destination {
   id          String             @id @default(cuid())
   name        String
   description String
-  price       Float
-  currency    String             @default("MYR")
+  accommodationPrice Float      @default(0)
+  otherPrice         Float      @default(0)
+  currency           String     @default("MYR")
   photoUrl    String
   link        String?
   details     String

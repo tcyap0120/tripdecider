@@ -31,9 +31,9 @@ export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { name, description, price, currency, photoUrl, link, details, tags } = body
+  const { name, description, accommodationPrice, otherPrice, currency, photoUrl, link, details, tags } = body
 
-  if (!name || !description || !photoUrl || price === undefined) {
+  if (!name || !description || !photoUrl) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
     data: {
       name,
       description,
-      price: parseFloat(price),
+      accommodationPrice: parseFloat(accommodationPrice) || 0,
+      otherPrice: parseFloat(otherPrice) || 0,
       currency: currency || 'MYR',
       photoUrl,
       link: link || null,

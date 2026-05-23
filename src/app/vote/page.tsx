@@ -12,7 +12,8 @@ interface Destination {
   id: string
   name: string
   description: string
-  price: number
+  accommodationPrice: number
+  otherPrice: number
   currency: string
   photoUrl: string
   link?: string
@@ -304,16 +305,32 @@ export default function VotePage() {
 
                 {/* Content */}
                 <div className="p-4">
-                  <div className="flex items-center justify-between mb-2 sm:mb-3">
-                    <div className="text-xl sm:text-2xl font-display font-bold text-sky-600">
-                      {dest.currency} {dest.price.toLocaleString()}
+                  {/* Per-pax price breakdown */}
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Est. Cost Per Pax</span>
+                      {dest.link && (
+                        <a href={dest.link} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-sky-500 hover:text-sky-700">🔗 Info</a>
+                      )}
                     </div>
-                    {dest.link && (
-                      <a href={dest.link} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-sky-500 hover:text-sky-700 flex items-center gap-0.5">
-                        🔗 Info
-                      </a>
-                    )}
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[6, 8, 10].map((pax) => {
+                        const total = dest.accommodationPrice + dest.otherPrice
+                        const perPax = total / pax
+                        return (
+                          <div key={pax} className="bg-gradient-to-br from-sky-50 to-cyan-50 border border-sky-100 rounded-xl p-2 text-center">
+                            <div className="text-xs text-slate-500 font-medium">{pax} pax</div>
+                            <div className="text-sm font-display font-bold text-sky-700 leading-tight">
+                              {dest.currency} {perPax.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1.5 text-center leading-tight">
+                      🏨 {dest.currency} {dest.accommodationPrice.toLocaleString()} + ✈️ {dest.currency} {dest.otherPrice.toLocaleString()}
+                    </p>
                   </div>
 
                   {dest.tags.length > 0 && (

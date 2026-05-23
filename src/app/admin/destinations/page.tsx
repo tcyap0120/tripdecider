@@ -11,7 +11,8 @@ interface Destination {
   id: string
   name: string
   description: string
-  price: number
+  accommodationPrice: number
+  otherPrice: number
   currency: string
   photoUrl: string
   link?: string
@@ -22,7 +23,7 @@ interface Destination {
 }
 
 const CURRENCIES = ['MYR', 'USD', 'EUR', 'SGD', 'THB', 'JPY', 'AUD', 'GBP']
-const empty = () => ({ name: '', description: '', price: '', currency: 'MYR', photoUrl: '', link: '', details: '', tags: '' })
+const empty = () => ({ name: '', description: '', accommodationPrice: '', otherPrice: '', currency: 'MYR', photoUrl: '', link: '', details: '', tags: '' })
 
 async function compressImage(file: File, maxWidth = 1400, quality = 0.82): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -99,7 +100,7 @@ export default function DestinationsPage() {
 
   function openEdit(dest: Destination) {
     setEditing(dest)
-    setForm({ name: dest.name, description: dest.description, price: String(dest.price), currency: dest.currency, photoUrl: dest.photoUrl, link: dest.link || '', details: dest.details, tags: dest.tags.join(', ') })
+    setForm({ name: dest.name, description: dest.description, accommodationPrice: String(dest.accommodationPrice), otherPrice: String(dest.otherPrice), currency: dest.currency, photoUrl: dest.photoUrl, link: dest.link || '', details: dest.details, tags: dest.tags.join(', ') })
     setError(''); setShowForm(true)
   }
 
@@ -109,7 +110,7 @@ export default function DestinationsPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setError('')
-    const body = { ...form, price: parseFloat(form.price), tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean) }
+    const body = { ...form, accommodationPrice: parseFloat(form.accommodationPrice) || 0, otherPrice: parseFloat(form.otherPrice) || 0, tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean) }
     const url = editing ? `/api/admin/destinations/${editing.id}` : '/api/admin/destinations'
     const res = await fetch(url, { method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     if (!res.ok) { const d = await res.json(); setError(d.error || 'Failed'); setSaving(false); return }
@@ -200,7 +201,7 @@ export default function DestinationsPage() {
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sky-600 font-bold">{dest.currency} {dest.price.toLocaleString()}</span>
+                  <span className="text-sky-600 font-bold text-sm">{dest.currency} {(dest.accommodationPrice + dest.otherPrice).toLocaleString()} total</span>
                   {dest.tags.length > 0 && (
                     <div className="flex gap-1">{dest.tags.slice(0, 2).map((t) => <span key={t} className="tag-pill">{t}</span>)}</div>
                   )}
@@ -237,15 +238,37 @@ export default function DestinationsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Price *</label>
-                  <input className="input-field" type="number" min="0" step="0.01" placeholder="2500" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
-                </div>
-                <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Currency</label>
                   <select className="input-field" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
                     {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Accommodation Price</label>
+                  <input className="input-field" type="number" min="0" step="0.01" placeholder="e.g. 3000 (hotel/resort total)" value={form.accommodationPrice} onChange={(e) => setForm({ ...form, accommodationPrice: e.target.value })} />
+                  <p className="text-xs text-slate-400 mt-1">Total accommodation cost for the group</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Other Price</label>
+                  <input className="input-field" type="number" min="0" step="0.01" placeholder="e.g. 1500 (flights, activities...)" value={form.otherPrice} onChange={(e) => setForm({ ...form, otherPrice: e.target.value })} />
+                  <p className="text-xs text-slate-400 mt-1">Flights, transport, activities, meals, etc.</p>
+                </div>
+                {(form.accommodationPrice || form.otherPrice) && (
+                  <div className="md:col-span-2 bg-sky-50 border border-sky-100 rounded-xl p-3 text-sm">
+                    <p className="font-semibold text-sky-700 mb-1">Est. Cost Per Pax</p>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      {[6, 8, 10].map((pax) => {
+                        const total = (parseFloat(form.accommodationPrice) || 0) + (parseFloat(form.otherPrice) || 0)
+                        return (
+                          <div key={pax} className="bg-white rounded-lg p-2 border border-sky-100">
+                            <div className="text-xs text-slate-500">{pax} pax</div>
+                            <div className="font-bold text-sky-700 text-sm">{form.currency} {(total / pax).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Main Photo */}
                 <div className="md:col-span-2">

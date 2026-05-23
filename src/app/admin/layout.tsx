@@ -41,35 +41,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Top nav */}
-      <header className="bg-gradient-to-r from-sky-600 to-teal-600 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="bg-gradient-to-r from-indigo-700 via-sky-600 to-teal-500 text-white shadow-xl">
+        <div className="max-w-7xl mx-auto px-4 pt-3 pb-0 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">✈️</span>
+            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-xl shadow-inner border border-white/30">
+              🏝️
+            </div>
             <div>
-              <h1 className="font-display font-bold text-lg leading-none">TripDecider</h1>
-              <p className="text-sky-200 text-xs">Admin Panel</p>
+              <h1 className="font-display font-extrabold text-xl leading-tight tracking-tight">
+                Trip<span className="text-cyan-300">Decider</span>
+              </h1>
+              <p className="text-white/60 text-xs font-medium tracking-widest uppercase">Admin Panel</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/vote" target="_blank" className="btn-ghost text-sm py-1.5 px-3">
+            <Link href="/vote" target="_blank"
+              className="flex items-center gap-1.5 text-sm font-medium bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 rounded-xl transition-all">
               👁️ Preview
             </Link>
-            <button onClick={handleLogout} className="btn-ghost text-sm py-1.5 px-3">
+            <button onClick={handleLogout}
+              className="flex items-center gap-1.5 text-sm font-medium bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 rounded-xl transition-all">
               Logout
             </button>
           </div>
         </div>
 
         {/* Nav tabs */}
-        <div className="max-w-7xl mx-auto px-4 flex gap-1 pb-0">
+        <div className="max-w-7xl mx-auto px-4 flex gap-1 mt-3">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-lg transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all ${
                 pathname === item.href
-                  ? 'bg-slate-50 text-slate-800'
-                  : 'text-sky-100 hover:bg-white/20'
+                  ? 'bg-slate-50 text-indigo-700 shadow-sm'
+                  : 'text-white/80 hover:bg-white/15 hover:text-white'
               }`}
             >
               <span>{item.icon}</span>

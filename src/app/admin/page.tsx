@@ -190,7 +190,7 @@ export default function AdminDashboard() {
                   {idx === 0 && totalVotes > 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
                 </div>
                 <img
-                  src={dest.photoUrl}
+                  src={dest.photoUrl || `https://picsum.photos/seed/${dest.id}/80/80`}
                   alt={dest.name}
                   className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${dest.id}/80/80` }}

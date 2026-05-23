@@ -7,7 +7,7 @@ export default function Home() {
   useEffect(() => { router.replace('/login') }, [router])
   return (
     <div className="travel-bg flex items-center justify-center">
-      <div className="text-white text-xl font-display animate-pulse-slow">✈️ Loading...</div>
+      <div className="text-white text-xl font-display animate-pulse-slow">🏝️ Loading...</div>
     </div>
   )
 }

@@ -169,7 +169,7 @@ export default function VotePage() {
     return (
       <div className="travel-bg flex items-center justify-center min-h-screen">
         <div className="text-white text-center">
-          <div className="text-6xl animate-float mb-4">✈️</div>
+          <div className="text-6xl animate-float mb-4">🏝️</div>
           <p className="text-xl font-display animate-pulse-slow">Loading destinations...</p>
         </div>
       </div>
@@ -186,7 +186,7 @@ export default function VotePage() {
       <header className="sticky top-0 z-40 bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xl sm:text-2xl flex-shrink-0">✈️</span>
+            <span className="text-xl sm:text-2xl flex-shrink-0">🏝️</span>
             <div className="min-w-0">
               <h1 className="font-display font-bold text-white text-base sm:text-lg leading-none truncate">TripDecider</h1>
               <p className="text-cyan-200 text-xs truncate">Hi, {user?.username}! 👋</p>
@@ -278,7 +278,7 @@ export default function VotePage() {
                 {/* Photo */}
                 <div className="relative h-44 sm:h-52 overflow-hidden">
                   <img
-                    src={dest.photoUrl}
+                    src={dest.photoUrl || `https://picsum.photos/seed/${dest.id}/600/400`}
                     alt={dest.name}
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${dest.id}/600/400` }}
@@ -328,7 +328,7 @@ export default function VotePage() {
                       })}
                     </div>
                     <p className="text-xs text-slate-400 mt-1.5 text-center leading-tight">
-                      🏨 MYR {dest.accommodationPrice.toLocaleString()} + ✈️ MYR {dest.otherPrice.toLocaleString()}
+                      🏨 MYR {dest.accommodationPrice.toLocaleString()} + 🌴 MYR {dest.otherPrice.toLocaleString()}
                     </p>
                   </div>
 
@@ -524,7 +524,7 @@ export default function VotePage() {
 
       {/* Footer */}
       <footer className="text-center py-4 text-cyan-200/60 text-xs relative z-10 mt-4">
-        ✈️ TripDecider — Happy travels!
+        🏝️ TripDecider — Happy travels!
       </footer>
     </div>
   )

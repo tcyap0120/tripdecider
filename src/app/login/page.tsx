@@ -39,7 +39,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative z-10 animate-slide-up">
         {/* Logo section */}
         <div className="text-center mb-8">
-          <div className="inline-block text-7xl mb-4 animate-float">✈️</div>
+          <div className="inline-block text-7xl mb-4 animate-float">🏝️</div>
           <h1 className="text-4xl font-display font-bold text-white mb-2">TripDecider</h1>
           <p className="text-cyan-100 text-lg">Vote for your dream destination!</p>
           <div className="flex justify-center gap-2 mt-3 text-2xl">

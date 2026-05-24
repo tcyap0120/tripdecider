@@ -65,6 +65,10 @@ export default function DestinationsPage() {
   const [deletingMedia, setDeletingMedia] = useState<string | null>(null)
   const [uploadingGallery, setUploadingGallery] = useState(false)
 
+  const [pasteMsg, setPasteMsg] = useState('')
+  const [pastingCover, setPastingCover] = useState(false)
+  const [pastingGallery, setPastingGallery] = useState(false)
+
   const mainFileRef = useRef<HTMLInputElement>(null)
   const multiFileRef = useRef<HTMLInputElement>(null)
   const galleryFileRef = useRef<HTMLInputElement>(null)
@@ -123,6 +127,70 @@ export default function DestinationsPage() {
 
   function openGallery(dest: Destination) {
     setGalleryDest(dest); setGalleryPhotoUrl(''); setGalleryCaption('')
+  }
+
+  function showPasteMsg(msg: string) {
+    setPasteMsg(msg)
+    setTimeout(() => setPasteMsg(''), 2500)
+  }
+
+  async function getClipboardImage(): Promise<File | null> {
+    try {
+      const items = await navigator.clipboard.read()
+      for (const item of items) {
+        const imageType = item.types.find((t) => t.startsWith('image/'))
+        if (imageType) {
+          const blob = await item.getType(imageType)
+          return new File([blob], 'pasted.png', { type: imageType })
+        }
+      }
+    } catch { /* clipboard denied or no image */ }
+    return null
+  }
+
+  async function pasteCoverFromClipboard() {
+    setPastingCover(true)
+    const file = await getClipboardImage()
+    if (file) {
+      const dataUrl = await compressImage(file)
+      setForm((f) => ({ ...f, photoUrl: dataUrl }))
+      showPasteMsg('✅ Pasted as cover photo!')
+    } else {
+      showPasteMsg('❌ No image in clipboard — copy an image first')
+    }
+    setPastingCover(false)
+  }
+
+  async function pasteGalleryFromClipboard() {
+    setPastingGallery(true)
+    const file = await getClipboardImage()
+    if (file) {
+      const dataUrl = await compressImage(file)
+      setGalleryQueue((q) => [...q, { dataUrl, caption: '', name: 'pasted-image' }])
+      showPasteMsg('✅ Added to gallery queue!')
+    } else {
+      showPasteMsg('❌ No image in clipboard — copy an image first')
+    }
+    setPastingGallery(false)
+  }
+
+  function handleFormPaste(e: React.ClipboardEvent) {
+    const items = Array.from(e.clipboardData.items)
+    const imageItem = items.find((item) => item.type.startsWith('image/'))
+    if (!imageItem) return
+    // Only intercept if an image is in the clipboard
+    e.preventDefault()
+    const file = imageItem.getAsFile()
+    if (!file) return
+    compressImage(file).then((dataUrl) => {
+      if (!form.photoUrl) {
+        setForm((f) => ({ ...f, photoUrl: dataUrl }))
+        showPasteMsg('✅ Pasted as cover photo!')
+      } else {
+        setGalleryQueue((q) => [...q, { dataUrl, caption: '', name: 'pasted-image' }])
+        showPasteMsg('✅ Added to gallery queue!')
+      }
+    })
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -278,7 +346,12 @@ export default function DestinationsPage() {
               <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-5">
+            <form onSubmit={handleSave} onPaste={handleFormPaste} className="p-6 space-y-5">
+              {pasteMsg && (
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium ${pasteMsg.startsWith('✅') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                  {pasteMsg}
+                </div>
+              )}
               {/* Name */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Destination Name *</label>
@@ -330,6 +403,10 @@ export default function DestinationsPage() {
                     className="flex-shrink-0 bg-violet-50 text-violet-600 border border-violet-200 hover:bg-violet-100 font-semibold px-3 py-2 rounded-xl text-sm transition-colors whitespace-nowrap">
                     {uploadingMain ? '⏳' : '📁 Upload'}
                   </button>
+                  <button type="button" onClick={pasteCoverFromClipboard} disabled={pastingCover}
+                    className="flex-shrink-0 bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 font-semibold px-3 py-2 rounded-xl text-sm transition-colors whitespace-nowrap">
+                    {pastingCover ? '⏳' : '📋 Paste'}
+                  </button>
                   <input ref={mainFileRef} type="file" accept="image/*" className="hidden" onChange={handleMainFileUpload} />
                 </div>
                 {form.photoUrl && (
@@ -346,14 +423,20 @@ export default function DestinationsPage() {
                 </div>
 
                 {/* Upload strip */}
-                <button type="button" onClick={() => multiFileRef.current?.click()} disabled={processingFiles}
-                  className="w-full border-2 border-dashed border-violet-200 hover:border-violet-400 bg-violet-50 hover:bg-violet-100 text-violet-600 font-medium py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                  {processingFiles
-                    ? <><span className="animate-spin">⏳</span> Processing photos...</>
-                    : <><span className="text-lg">📸</span> Select multiple photos</>}
-                </button>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => multiFileRef.current?.click()} disabled={processingFiles}
+                    className="flex-1 border-2 border-dashed border-violet-200 hover:border-violet-400 bg-violet-50 hover:bg-violet-100 text-violet-600 font-medium py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                    {processingFiles
+                      ? <><span className="animate-spin">⏳</span> Processing...</>
+                      : <><span className="text-lg">📸</span> Select photos</>}
+                  </button>
+                  <button type="button" onClick={pasteGalleryFromClipboard} disabled={pastingGallery}
+                    className="flex-shrink-0 border-2 border-dashed border-emerald-200 hover:border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-medium py-3 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-1.5">
+                    {pastingGallery ? <><span className="animate-spin">⏳</span></> : <><span>📋</span> Paste</>}
+                  </button>
+                </div>
                 <input ref={multiFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleMultiFileUpload} />
-                <p className="text-xs text-slate-400 mt-1">Select as many photos as you want — all will be auto-compressed and added to the gallery</p>
+                <p className="text-xs text-slate-400 mt-1">Select files or paste from clipboard (Ctrl+V anywhere in this form)</p>
 
                 {/* Queue previews */}
                 {galleryQueue.length > 0 && (

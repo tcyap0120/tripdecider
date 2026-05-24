@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Participant {
   id: string
@@ -22,6 +22,7 @@ export default function ParticipantsPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const mouseDownTarget = useRef<EventTarget | null>(null)
 
   async function load() {
     const res = await fetch('/api/admin/participants')
@@ -217,7 +218,11 @@ export default function ParticipantsPage() {
 
       {/* Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false) }}>
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onMouseDown={(e) => { mouseDownTarget.current = e.target }}
+          onClick={(e) => { if (e.target === e.currentTarget && mouseDownTarget.current === e.currentTarget) setShowForm(false) }}
+        >
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
               <h3 className="text-xl font-display font-bold text-slate-800">
@@ -261,6 +266,7 @@ export default function ParticipantsPage() {
                   max="100"
                   value={form.voteCount}
                   onChange={(e) => setForm({ ...form, voteCount: e.target.value })}
+                  onWheel={(e) => e.currentTarget.blur()}
                   required
                 />
                 <p className="text-xs text-slate-400 mt-1">How many destinations this participant can vote for</p>

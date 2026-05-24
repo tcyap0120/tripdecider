@@ -67,6 +67,11 @@ export default function VotePage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const lastMsgCount = useRef(0)
 
+  // Per-destination comment state
+  const [commentText, setCommentText] = useState('')
+  const [commentingId, setCommentingId] = useState<string | null>(null)
+  const [sendingComment, setSendingComment] = useState(false)
+
   const loadData = useCallback(async () => {
     const [meRes, destRes, settingsRes] = await Promise.all([
       fetch('/api/auth/me'),
@@ -146,6 +151,18 @@ export default function VotePage() {
     setSending(false)
   }
 
+  async function handleSendComment(destId: string) {
+    if (!commentText.trim() || sendingComment) return
+    setSendingComment(true)
+    const res = await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: commentText.trim(), destinationId: destId }),
+    })
+    if (res.ok) { setCommentText(''); setCommentingId(null); await loadMessages() }
+    setSendingComment(false)
+  }
+
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
@@ -202,7 +219,7 @@ export default function VotePage() {
               </a>
             )}
             <a href="/discussion" className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3 flex items-center gap-1">
-              <span>💬</span><span className="hidden sm:inline">Chat</span>
+              <span>💬</span><span className="hidden sm:inline">Discussion</span>
             </a>
             {votingOpen && (
               <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 ${
@@ -352,53 +369,95 @@ export default function VotePage() {
 
                   <p className="text-slate-600 text-sm leading-relaxed mb-3">{dest.description}</p>
 
-                  {(dest.details || dest.media.length > 0) && (
-                    <div className="mb-3">
-                      <button
-                        onClick={() => setExpandedId(expandedId === dest.id ? null : dest.id)}
-                        className="text-sky-500 text-xs font-medium hover:text-sky-700 transition-colors flex items-center gap-1"
-                      >
-                        {expandedId === dest.id ? '▲ Less' : `▼ More info${dest.media.length > 0 ? ` · 📸 ${dest.media.length}` : ''}`}
-                      </button>
-                      {expandedId === dest.id && (
-                        <div className="mt-2 animate-fade-in space-y-3">
-                          {dest.link && (
-                            <a
-                              href={dest.link.startsWith('http') ? dest.link : `https://${dest.link}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex items-center justify-center gap-2 w-full py-2 bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 rounded-xl text-sm font-semibold transition-colors"
-                            >
-                              🔗 Open Info Page
-                            </a>
+                  {(() => {
+                    const destComments = messages.filter((m) => m.destinationId === dest.id)
+                    return (
+                      <div className="mb-3">
+                        <button
+                          onClick={() => setExpandedId(expandedId === dest.id ? null : dest.id)}
+                          className="text-sky-500 text-xs font-medium hover:text-sky-700 transition-colors flex items-center gap-1"
+                        >
+                          {expandedId === dest.id ? '▲ Less' : (
+                            <>▼ More info{dest.media.length > 0 ? ` · 📸 ${dest.media.length}` : ''}{destComments.length > 0 ? ` · 💬 ${destComments.length}` : ''}</>
                           )}
-                          {dest.details && (
-                            <div className="text-sm text-slate-600 bg-slate-50 rounded-xl p-3 leading-relaxed">
-                              {dest.details}
-                            </div>
-                          )}
-                          {dest.media.length > 0 && (
-                            <div>
-                              <p className="text-xs font-semibold text-slate-500 mb-2">📸 Gallery</p>
-                              <div className="grid grid-cols-2 gap-2">
-                                {dest.media.map((item) => (
-                                  <div key={item.id} className="rounded-xl overflow-hidden border border-slate-100">
-                                    <img src={item.photoUrl} alt={item.caption || dest.name}
-                                      className="w-full h-24 object-cover"
-                                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                                    {item.caption && (
-                                      <p className="text-xs text-slate-500 px-2 py-1 truncate">{item.caption}</p>
-                                    )}
-                                  </div>
-                                ))}
+                        </button>
+                        {expandedId === dest.id && (
+                          <div className="mt-2 animate-fade-in space-y-3">
+                            {dest.link && (
+                              <a
+                                href={dest.link.startsWith('http') ? dest.link : `https://${dest.link}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center justify-center gap-2 w-full py-2 bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 rounded-xl text-sm font-semibold transition-colors"
+                              >
+                                🔗 Open Info Page
+                              </a>
+                            )}
+                            {dest.details && (
+                              <div className="text-sm text-slate-600 bg-slate-50 rounded-xl p-3 leading-relaxed">
+                                {dest.details}
                               </div>
+                            )}
+                            {dest.media.length > 0 && (
+                              <div>
+                                <p className="text-xs font-semibold text-slate-500 mb-2">📸 Gallery</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {dest.media.map((item) => (
+                                    <div key={item.id} className="rounded-xl overflow-hidden border border-slate-100">
+                                      <img src={item.photoUrl} alt={item.caption || dest.name}
+                                        className="w-full h-24 object-cover"
+                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                      {item.caption && (
+                                        <p className="text-xs text-slate-500 px-2 py-1 truncate">{item.caption}</p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Destination comments */}
+                            <div className="border-t border-slate-100 pt-3">
+                              <p className="text-xs font-semibold text-slate-500 mb-2">💬 Discussion ({destComments.length})</p>
+                              {destComments.length > 0 && (
+                                <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                                  {destComments.map((msg) => (
+                                    <div key={msg.id} className="flex gap-2">
+                                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">
+                                        {msg.username[0].toUpperCase()}
+                                      </div>
+                                      <div className="flex-1 bg-slate-50 rounded-xl px-2.5 py-1.5">
+                                        <span className="text-xs font-semibold text-slate-700">{msg.username} </span>
+                                        <span className="text-xs text-slate-500">{formatTime(msg.createdAt)}</span>
+                                        <p className="text-xs text-slate-700 mt-0.5 break-words">{msg.content}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <form onSubmit={(e) => { e.preventDefault(); handleSendComment(dest.id) }} className="flex gap-1.5">
+                                <input
+                                  className="flex-1 bg-slate-100 rounded-xl px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-sky-300 focus:bg-white transition-all"
+                                  placeholder="Add a comment…"
+                                  value={commentingId === dest.id ? commentText : ''}
+                                  onChange={(e) => { setCommentingId(dest.id); setCommentText(e.target.value) }}
+                                  maxLength={500}
+                                />
+                                <button
+                                  type="submit"
+                                  disabled={!(commentingId === dest.id && commentText.trim()) || sendingComment}
+                                  className="flex-shrink-0 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors disabled:opacity-40"
+                                >
+                                  {sendingComment && commentingId === dest.id ? '⏳' : 'Send'}
+                                </button>
+                              </form>
                             </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
 
                   {/* Vote button — large touch target */}
                   {votingOpen ? (

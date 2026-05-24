@@ -19,6 +19,8 @@ interface Destination {
   link?: string
   details: string
   tags: string[]
+  days: number
+  nights: number
   voteCount: number
   hasVoted: boolean
   media: MediaItem[]
@@ -321,6 +323,11 @@ export default function VotePage() {
                   )}
                   <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                     <h3 className="text-white font-display font-bold text-lg sm:text-xl leading-tight">{dest.name}</h3>
+                    {(dest.days > 0 || dest.nights > 0) && (
+                      <span className="inline-block mt-1 text-xs bg-white/25 backdrop-blur text-white font-bold px-2.5 py-0.5 rounded-full">
+                        {dest.days > 0 ? `${dest.days}D` : ''}{dest.nights > 0 ? `${dest.nights}N` : ''}
+                      </span>
+                    )}
                   </div>
                 </div>
 

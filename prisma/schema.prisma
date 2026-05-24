@@ -18,6 +18,8 @@ model Destination {
   link        String?
   details     String
   tags        String             @default("")
+  days        Int                @default(0)
+  nights      Int                @default(0)
   order       Int                @default(0)
   createdAt   DateTime           @default(now())
   votes       Vote[]

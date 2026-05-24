@@ -14,11 +14,13 @@ interface Destination {
   link?: string
   details: string
   tags: string[]
+  days: number
+  nights: number
   voteCount: number
   media: MediaItem[]
 }
 
-const empty = () => ({ name: '', description: '', accommodationPrice: '', otherPrice: '', photoUrl: '', link: '', details: '', tags: '' })
+const empty = () => ({ name: '', description: '', accommodationPrice: '', otherPrice: '', photoUrl: '', link: '', details: '', tags: '', days: '', nights: '' })
 
 async function compressImage(file: File, maxWidth = 1400, quality = 0.82): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -121,7 +123,7 @@ export default function DestinationsPage() {
 
   function openEdit(dest: Destination) {
     setEditing(dest)
-    setForm({ name: dest.name, description: dest.description, accommodationPrice: String(dest.accommodationPrice), otherPrice: String(dest.otherPrice), photoUrl: dest.photoUrl, link: dest.link || '', details: dest.details, tags: dest.tags.join(', ') })
+    setForm({ name: dest.name, description: dest.description, accommodationPrice: String(dest.accommodationPrice), otherPrice: String(dest.otherPrice), photoUrl: dest.photoUrl, link: dest.link || '', details: dest.details, tags: dest.tags.join(', '), days: dest.days ? String(dest.days) : '', nights: dest.nights ? String(dest.nights) : '' })
     setGalleryQueue([]); setError(''); setShowForm(true)
   }
 
@@ -202,6 +204,8 @@ export default function DestinationsPage() {
       otherPrice: parseFloat(form.otherPrice) || 0,
       currency: 'MYR',
       tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+      days: parseInt(form.days) || 0,
+      nights: parseInt(form.nights) || 0,
     }
 
     if (!form.name.trim()) { setError('Destination name is required'); setSaving(false); return }
@@ -308,7 +312,14 @@ export default function DestinationsPage() {
                   onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${dest.id}/400/300` }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-                  <h3 className="text-white font-display font-bold text-lg leading-tight">{dest.name}</h3>
+                  <div>
+                    <h3 className="text-white font-display font-bold text-lg leading-tight">{dest.name}</h3>
+                    {(dest.days > 0 || dest.nights > 0) && (
+                      <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold mt-1 inline-block">
+                        {dest.days > 0 ? `${dest.days}D` : ''}{dest.nights > 0 ? `${dest.nights}N` : ''}
+                      </span>
+                    )}
+                  </div>
                   <div className="vote-badge text-xs"><span>🗳️</span> {dest.voteCount}</div>
                 </div>
                 {dest.media.length > 0 && (
@@ -371,6 +382,26 @@ export default function DestinationsPage() {
                   <p className="text-xs text-slate-400 mt-1">Flights, transport, activities</p>
                 </div>
               </div>
+
+              {/* Days / Nights */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Days</label>
+                  <input className="input-field" type="number" min="0" step="1" placeholder="e.g. 3" value={form.days} onChange={(e) => setForm({ ...form, days: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nights</label>
+                  <input className="input-field" type="number" min="0" step="1" placeholder="e.g. 2" value={form.nights} onChange={(e) => setForm({ ...form, nights: e.target.value })} />
+                </div>
+              </div>
+              {(form.days || form.nights) && (
+                <div className="flex items-center gap-2">
+                  <span className="bg-indigo-100 text-indigo-700 font-bold text-sm px-3 py-1 rounded-full">
+                    {form.days || '?'}D{form.nights || '?'}N
+                  </span>
+                  <span className="text-xs text-slate-400">will be shown on destination cards</span>
+                </div>
+              )}
 
               {/* Per pax preview */}
               {(form.accommodationPrice || form.otherPrice) && (

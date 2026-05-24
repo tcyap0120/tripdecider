@@ -15,7 +15,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params
   const body = await req.json()
-  const { name, description, accommodationPrice, otherPrice, currency, photoUrl, link, details, tags } = body
+  const { name, description, accommodationPrice, otherPrice, currency, photoUrl, link, details, tags, days, nights } = body
 
   const destination = await prisma.destination.update({
     where: { id },
@@ -29,6 +29,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       link: link || null,
       details: details || '',
       tags: Array.isArray(tags) ? tags.join(',') : (tags || ''),
+      days: parseInt(days) || 0,
+      nights: parseInt(nights) || 0,
     },
   })
 

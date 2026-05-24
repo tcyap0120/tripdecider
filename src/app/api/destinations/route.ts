@@ -37,6 +37,8 @@ export async function GET() {
       link: d.link,
       details: d.details,
       tags: d.tags ? d.tags.split(',').filter(Boolean) : [],
+      days: d.days,
+      nights: d.nights,
       voteCount: d._count.votes,
       hasVoted: votedIds.includes(d.id),
       media: d.media.map((m) => ({ id: m.id, photoUrl: m.photoUrl, caption: m.caption })),

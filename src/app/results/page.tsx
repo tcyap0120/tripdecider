@@ -13,6 +13,8 @@ interface DestResult {
   photoUrl: string
   link?: string
   tags: string[]
+  days: number
+  nights: number
   voteCount: number
   hasVoted: boolean
   media: { id: string; photoUrl: string; caption: string }[]
@@ -150,8 +152,15 @@ export default function ResultsPage() {
                     </div>
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
-                    <h2 className="text-2xl sm:text-4xl font-display font-bold text-white leading-tight">{winner.name}</h2>
-                    <div className="flex items-center gap-3 mt-2 flex-wrap">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h2 className="text-2xl sm:text-4xl font-display font-bold text-white leading-tight">{winner.name}</h2>
+                      {(winner.days > 0 || winner.nights > 0) && (
+                        <span className="text-sm bg-white/25 text-white font-bold px-2.5 py-0.5 rounded-full self-center">
+                          {winner.days > 0 ? `${winner.days}D` : ''}{winner.nights > 0 ? `${winner.nights}N` : ''}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
                       <span className="text-amber-300 font-bold text-base sm:text-xl">
                         {winner.voteCount} vote{winner.voteCount !== 1 ? 's' : ''} ({Math.round((winner.voteCount / totalVotes) * 100)}%)
                       </span>
@@ -192,7 +201,14 @@ export default function ResultsPage() {
                     {/* Content */}
                     <div className="flex-1 p-3 sm:p-4 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <h3 className="font-display font-bold text-slate-800 text-base sm:text-lg leading-tight truncate">{dest.name}</h3>
+                        <div className="min-w-0">
+                          <h3 className="font-display font-bold text-slate-800 text-base sm:text-lg leading-tight truncate">{dest.name}</h3>
+                          {(dest.days > 0 || dest.nights > 0) && (
+                            <span className="text-xs bg-indigo-100 text-indigo-600 font-bold px-2 py-0.5 rounded-full inline-block mt-0.5">
+                              {dest.days > 0 ? `${dest.days}D` : ''}{dest.nights > 0 ? `${dest.nights}N` : ''}
+                            </span>
+                          )}
+                        </div>
                         {dest.hasVoted && (
                           <span className="flex-shrink-0 text-xs bg-emerald-100 text-emerald-600 font-medium px-2 py-0.5 rounded-full">✅ Your vote</span>
                         )}

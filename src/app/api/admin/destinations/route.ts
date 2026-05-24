@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { name, description, accommodationPrice, otherPrice, currency, photoUrl, link, details, tags } = body
+  const { name, description, accommodationPrice, otherPrice, currency, photoUrl, link, details, tags, days, nights } = body
 
   if (!name) {
     return NextResponse.json({ error: 'Destination name is required' }, { status: 400 })
@@ -48,6 +48,8 @@ export async function POST(req: NextRequest) {
       link: link || null,
       details: details || '',
       tags: Array.isArray(tags) ? tags.join(',') : (tags || ''),
+      days: parseInt(days) || 0,
+      nights: parseInt(nights) || 0,
     },
   })
 

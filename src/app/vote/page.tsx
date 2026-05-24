@@ -282,7 +282,7 @@ export default function VotePage() {
                 {/* Photo */}
                 <div className="relative h-44 sm:h-52 overflow-hidden">
                   <img
-                    src={dest.photoUrl || `https://picsum.photos/seed/${dest.id}/600/400`}
+                    src={dest.photoUrl || dest.media?.[0]?.photoUrl || `https://picsum.photos/seed/${dest.id}/600/400`}
                     alt={dest.name}
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${dest.id}/600/400` }}
@@ -313,8 +313,15 @@ export default function VotePage() {
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Est. Cost Per Pax</span>
                       {dest.link && (
-                        <a href={dest.link} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-sky-500 hover:text-sky-700">🔗 Info</a>
+                        <a
+                          href={dest.link.startsWith('http') ? dest.link : `https://${dest.link}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1 text-xs font-semibold bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 px-2.5 py-1 rounded-full transition-colors"
+                        >
+                          🔗 Info
+                        </a>
                       )}
                     </div>
                     <div className="grid grid-cols-3 gap-1.5">
@@ -354,6 +361,17 @@ export default function VotePage() {
                       </button>
                       {expandedId === dest.id && (
                         <div className="mt-2 animate-fade-in space-y-3">
+                          {dest.link && (
+                            <a
+                              href={dest.link.startsWith('http') ? dest.link : `https://${dest.link}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center justify-center gap-2 w-full py-2 bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 rounded-xl text-sm font-semibold transition-colors"
+                            >
+                              🔗 Open Info Page
+                            </a>
+                          )}
                           {dest.details && (
                             <div className="text-sm text-slate-600 bg-slate-50 rounded-xl p-3 leading-relaxed">
                               {dest.details}

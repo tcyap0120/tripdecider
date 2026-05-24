@@ -236,7 +236,7 @@ export default function DestinationsPage() {
           {destinations.map((dest) => (
             <div key={dest.id} className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
               <div className="relative h-44">
-                <img src={dest.photoUrl || `https://picsum.photos/seed/${dest.id}/400/300`} alt={dest.name} className="w-full h-full object-cover"
+                <img src={dest.photoUrl || dest.media?.[0]?.photoUrl || `https://picsum.photos/seed/${dest.id}/400/300`} alt={dest.name} className="w-full h-full object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${dest.id}/400/300` }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">

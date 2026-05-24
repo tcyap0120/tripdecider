@@ -137,7 +137,7 @@ export default function ResultsPage() {
               >
                 <div className="relative h-56 sm:h-72">
                   <img
-                    src={winner.photoUrl || `https://picsum.photos/seed/${winner.id}/800/500`}
+                    src={winner.photoUrl || winner.media?.[0]?.photoUrl || `https://picsum.photos/seed/${winner.id}/800/500`}
                     alt={winner.name}
                     className="w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${winner.id}/800/500` }}
@@ -181,7 +181,7 @@ export default function ResultsPage() {
                     {/* Photo */}
                     <div className="w-20 sm:w-28 flex-shrink-0 overflow-hidden">
                       <img
-                        src={dest.photoUrl || `https://picsum.photos/seed/${dest.id}/200/200`}
+                        src={dest.photoUrl || dest.media?.[0]?.photoUrl || `https://picsum.photos/seed/${dest.id}/200/200`}
                         alt={dest.name}
                         className="w-full h-full object-cover"
                         onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${dest.id}/200/200` }}

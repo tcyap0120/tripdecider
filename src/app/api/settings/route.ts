@@ -15,5 +15,6 @@ export async function GET() {
   return NextResponse.json({
     resultsPublic: settings['resultsPublic'] === 'true',
     votingOpen: settings['votingOpen'] !== 'false',
+    announcement: settings['announcement'] || '',
   })
 }

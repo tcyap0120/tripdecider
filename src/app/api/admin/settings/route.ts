@@ -20,6 +20,7 @@ export async function GET() {
   return NextResponse.json({
     resultsPublic: settings['resultsPublic'] === 'true',
     votingOpen: settings['votingOpen'] !== 'false',
+    announcement: settings['announcement'] || '',
   })
 }
 
@@ -29,7 +30,7 @@ export async function PUT(req: NextRequest) {
   const body = await req.json()
 
   for (const [key, value] of Object.entries(body)) {
-    if (typeof value !== 'boolean') continue
+    if (typeof value !== 'boolean' && typeof value !== 'string') continue
     await prisma.settings.upsert({
       where: { key },
       create: { key, value: String(value) },

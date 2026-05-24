@@ -23,14 +23,18 @@ interface Participant {
 interface AppSettings {
   resultsPublic: boolean
   votingOpen: boolean
+  announcement: string
 }
 
 export default function AdminDashboard() {
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [participants, setParticipants] = useState<Participant[]>([])
-  const [settings, setSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true })
+  const [settings, setSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '' })
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
+  const [announcementDraft, setAnnouncementDraft] = useState('')
+  const [savingAnnouncement, setSavingAnnouncement] = useState(false)
+  const [announcementSaved, setAnnouncementSaved] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -41,6 +45,7 @@ export default function AdminDashboard() {
       setDestinations(dests)
       setParticipants(parts)
       setSettings(s)
+      setAnnouncementDraft(s.announcement || '')
       setLoading(false)
     })
   }, [])
@@ -55,6 +60,19 @@ export default function AdminDashboard() {
     })
     if (res.ok) setSettings((s) => ({ ...s, [key]: newVal }))
     setToggling(null)
+  }
+
+  async function saveAnnouncement(text: string) {
+    setSavingAnnouncement(true)
+    await fetch('/api/admin/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ announcement: text }),
+    })
+    setSettings((s) => ({ ...s, announcement: text }))
+    setSavingAnnouncement(false)
+    setAnnouncementSaved(true)
+    setTimeout(() => setAnnouncementSaved(false), 2000)
   }
 
   const totalVotes = destinations.reduce((s, d) => s + d.voteCount, 0)
@@ -131,6 +149,56 @@ export default function AdminDashboard() {
           <div className="mt-3 flex items-center gap-2 bg-sky-50 border border-sky-200 rounded-xl px-4 py-2.5 text-sm text-sky-700">
             <span>ℹ️</span>
             <span>Participants can now see live vote counts and the results page at <strong>/results</strong></span>
+          </div>
+        )}
+      </div>
+
+      {/* ── ANNOUNCEMENT ── */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-display font-bold text-slate-800">📢 Announcement Box</h2>
+            <p className="text-slate-500 text-xs mt-0.5">Shown at the top of the voting page. Leave empty to hide.</p>
+          </div>
+          {settings.announcement && (
+            <span className="text-xs bg-emerald-100 text-emerald-700 font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+              Live
+            </span>
+          )}
+        </div>
+        <textarea
+          className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 resize-none focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all"
+          rows={3}
+          placeholder="e.g. 🎉 Voting closes this Sunday! Make sure you've cast all your votes."
+          value={announcementDraft}
+          onChange={(e) => setAnnouncementDraft(e.target.value)}
+          maxLength={300}
+        />
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-slate-400">{announcementDraft.length}/300</span>
+          <div className="flex gap-2">
+            {announcementDraft && (
+              <button
+                onClick={() => { setAnnouncementDraft(''); saveAnnouncement('') }}
+                className="text-xs text-red-500 hover:text-red-700 font-medium px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+              >
+                🗑️ Clear
+              </button>
+            )}
+            <button
+              onClick={() => saveAnnouncement(announcementDraft)}
+              disabled={savingAnnouncement || announcementDraft === settings.announcement}
+              className="btn-primary text-xs px-4 py-1.5 disabled:opacity-40"
+            >
+              {announcementSaved ? '✅ Saved!' : savingAnnouncement ? '⏳ Saving…' : '💾 Publish'}
+            </button>
+          </div>
+        </div>
+        {announcementDraft && (
+          <div className="mt-3 border border-amber-200 bg-amber-50 rounded-xl px-4 py-3 text-sm text-amber-800">
+            <p className="text-xs font-semibold text-amber-600 mb-1">Preview (as seen by participants):</p>
+            <p className="leading-relaxed">{announcementDraft}</p>
           </div>
         )}
       </div>

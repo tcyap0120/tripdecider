@@ -39,6 +39,7 @@ interface UserInfo {
 interface AppSettings {
   resultsPublic: boolean
   votingOpen: boolean
+  announcement: string
 }
 
 interface Message {
@@ -54,7 +55,7 @@ export default function VotePage() {
   const router = useRouter()
   const [user, setUser] = useState<UserInfo | null>(null)
   const [destinations, setDestinations] = useState<Destination[]>([])
-  const [appSettings, setAppSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true })
+  const [appSettings, setAppSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '' })
   const [loading, setLoading] = useState(true)
   const [voting, setVoting] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -253,6 +254,14 @@ export default function VotePage() {
 
       {/* ── MAIN CONTENT ── */}
       <main className="max-w-6xl mx-auto px-3 sm:px-4 py-5 sm:py-8 relative z-10">
+        {/* Announcement */}
+        {appSettings.announcement && (
+          <div className="mb-5 flex items-start gap-3 bg-white/20 backdrop-blur border border-white/30 rounded-2xl px-4 py-3.5 text-white shadow-lg animate-fade-in">
+            <span className="text-xl flex-shrink-0 mt-0.5">📢</span>
+            <p className="text-sm sm:text-base leading-relaxed font-medium">{appSettings.announcement}</p>
+          </div>
+        )}
+
         {/* Hero */}
         <div className="text-center mb-6 sm:mb-10">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mb-1 sm:mb-2">

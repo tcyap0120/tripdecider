@@ -373,12 +373,12 @@ export default function DestinationsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Accommodation Price (MYR)</label>
-                  <input className="input-field" type="number" min="0" step="0.01" placeholder="e.g. 3000" value={form.accommodationPrice} onChange={(e) => setForm({ ...form, accommodationPrice: e.target.value })} />
+                  <input className="input-field" type="number" min="0" step="0.01" placeholder="e.g. 3000" value={form.accommodationPrice} onChange={(e) => setForm({ ...form, accommodationPrice: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
                   <p className="text-xs text-slate-400 mt-1">Hotel/resort total for group</p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Other Price (MYR)</label>
-                  <input className="input-field" type="number" min="0" step="0.01" placeholder="e.g. 1500" value={form.otherPrice} onChange={(e) => setForm({ ...form, otherPrice: e.target.value })} />
+                  <input className="input-field" type="number" min="0" step="0.01" placeholder="e.g. 1500" value={form.otherPrice} onChange={(e) => setForm({ ...form, otherPrice: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
                   <p className="text-xs text-slate-400 mt-1">Flights, transport, activities</p>
                 </div>
               </div>
@@ -387,11 +387,11 @@ export default function DestinationsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Days</label>
-                  <input className="input-field" type="number" min="0" step="1" placeholder="e.g. 3" value={form.days} onChange={(e) => setForm({ ...form, days: e.target.value })} />
+                  <input className="input-field" type="number" min="0" step="1" placeholder="e.g. 3" value={form.days} onChange={(e) => setForm({ ...form, days: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nights</label>
-                  <input className="input-field" type="number" min="0" step="1" placeholder="e.g. 2" value={form.nights} onChange={(e) => setForm({ ...form, nights: e.target.value })} />
+                  <input className="input-field" type="number" min="0" step="1" placeholder="e.g. 2" value={form.nights} onChange={(e) => setForm({ ...form, nights: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
                 </div>
               </div>
               {(form.days || form.nights) && (
@@ -441,8 +441,16 @@ export default function DestinationsPage() {
                   <input ref={mainFileRef} type="file" accept="image/*" className="hidden" onChange={handleMainFileUpload} />
                 </div>
                 {form.photoUrl && (
-                  <img src={form.photoUrl} alt="preview" className="h-32 w-full object-cover rounded-xl border border-slate-200"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  <div className="relative">
+                    <img src={form.photoUrl} alt="preview" className="h-32 w-full object-cover rounded-xl border border-slate-200"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, photoUrl: '' })}
+                      className="absolute top-2 right-2 bg-black/60 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm transition-colors"
+                      title="Remove cover photo"
+                    >×</button>
+                  </div>
                 )}
               </div>
 

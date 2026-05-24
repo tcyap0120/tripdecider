@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import TravelFooter from '@/components/TravelFooter'
 
 interface Message {
   id: string
@@ -215,6 +216,7 @@ export default function DiscussionPage() {
           </form>
           <p className="text-white/30 text-xs text-right mt-1 pr-1">{input.length}/500 · Shift+Enter for new line</p>
         </div>
+        <TravelFooter />
       </div>
     </div>
   )

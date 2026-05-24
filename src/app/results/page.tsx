@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import TravelFooter from '@/components/TravelFooter'
 
 interface DestResult {
   id: string
@@ -253,6 +254,7 @@ export default function ResultsPage() {
           </>
         )}
       </main>
+      <TravelFooter />
     </div>
   )
 }

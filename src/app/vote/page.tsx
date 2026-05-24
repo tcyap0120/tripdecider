@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import TravelFooter from '@/components/TravelFooter'
 
 interface MediaItem {
   id: string
@@ -544,10 +545,7 @@ export default function VotePage() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="text-center py-4 text-cyan-200/60 text-xs relative z-10 mt-4">
-        🏝️ TripDecider — Happy travels!
-      </footer>
+      <TravelFooter />
     </div>
   )
 }

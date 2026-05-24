@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 interface Participant {
   id: string
   username: string
+  displayName: string
   voteCount: number
   votesUsed: number
   remainingVotes: number
   createdAt: string
 }
 
-const emptyForm = () => ({ username: '', password: '', voteCount: '1' })
+const emptyForm = () => ({ username: '', displayName: '', password: '', voteCount: '1' })
 
 export default function ParticipantsPage() {
   const [participants, setParticipants] = useState<Participant[]>([])
@@ -39,7 +40,7 @@ export default function ParticipantsPage() {
 
   function openEdit(p: Participant) {
     setEditing(p)
-    setForm({ username: p.username, password: '', voteCount: String(p.voteCount) })
+    setForm({ username: p.username, displayName: p.displayName || '', password: '', voteCount: String(p.voteCount) })
     setError('')
     setShowForm(true)
   }
@@ -55,7 +56,7 @@ export default function ParticipantsPage() {
       return
     }
 
-    const body: Record<string, string | number> = { username: form.username, voteCount: parseInt(form.voteCount) }
+    const body: Record<string, string | number> = { username: form.username, displayName: form.displayName, voteCount: parseInt(form.voteCount) }
     if (form.password) body.password = form.password
 
     const url = editing ? `/api/admin/participants/${editing.id}` : '/api/admin/participants'
@@ -138,8 +139,8 @@ export default function ParticipantsPage() {
                           {p.username[0].toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-800">{p.username}</div>
-                          <div className="text-slate-400 text-xs">ID: {p.id.slice(0, 8)}...</div>
+                          <div className="font-semibold text-slate-800">{p.displayName || p.username}</div>
+                          {p.displayName && <div className="text-slate-400 text-xs">@{p.username}</div>}
                         </div>
                       </div>
                     </td>
@@ -227,8 +228,14 @@ export default function ParticipantsPage() {
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Username *</label>
-                <input className="input-field" placeholder="e.g. alice" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required />
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Name (shown in app)</label>
+                <input className="input-field" placeholder="e.g. Alice" value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} />
+                <p className="text-xs text-slate-400 mt-1">Friendly name shown in chat and greetings</p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Login Username *</label>
+                <input className="input-field" placeholder="e.g. alice123" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required />
+                <p className="text-xs text-slate-400 mt-1">Used to log in — must be unique</p>
               </div>
 
               <div>

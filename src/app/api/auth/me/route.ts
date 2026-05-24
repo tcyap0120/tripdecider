@@ -24,6 +24,7 @@ export async function GET() {
     isLoggedIn: true,
     userId: session.userId,
     username: session.username,
+    displayName: participant.displayName || participant.username,
     voteCount: participant.voteCount,
     votesUsed: participant._count.votes,
     remainingVotes: participant.voteCount - participant._count.votes,

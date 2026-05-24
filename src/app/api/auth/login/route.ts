@@ -26,11 +26,12 @@ export async function POST(req: NextRequest) {
     const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
     session.userId = participant.id
     session.username = participant.username
+    session.displayName = participant.displayName || participant.username
     session.isAdmin = false
     session.isLoggedIn = true
     await session.save()
 
-    return NextResponse.json({ ok: true, username: participant.username })
+    return NextResponse.json({ ok: true, username: participant.username, displayName: participant.displayName || participant.username })
   } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }

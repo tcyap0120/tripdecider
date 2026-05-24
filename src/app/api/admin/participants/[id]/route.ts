@@ -15,15 +15,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { username, password, voteCount } = await req.json()
+  const { username, password, displayName, voteCount } = await req.json()
 
-  const data: { username?: string; passwordHash?: string; voteCount?: number } = {}
+  const data: { username?: string; displayName?: string; passwordHash?: string; voteCount?: number } = {}
   if (username) data.username = username
+  if (displayName !== undefined) data.displayName = displayName
   if (password) data.passwordHash = await bcrypt.hash(password, 10)
   if (voteCount !== undefined) data.voteCount = parseInt(voteCount)
 
   const participant = await prisma.participant.update({ where: { id }, data })
-  return NextResponse.json({ id: participant.id, username: participant.username, voteCount: participant.voteCount })
+  return NextResponse.json({ id: participant.id, username: participant.username, displayName: participant.displayName, voteCount: participant.voteCount })
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

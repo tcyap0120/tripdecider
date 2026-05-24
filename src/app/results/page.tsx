@@ -119,7 +119,7 @@ export default function ResultsPage() {
           <p className="text-cyan-100 text-base sm:text-lg">
             {totalVotes} total vote{totalVotes !== 1 ? 's' : ''} cast · {destinations.length} destination{destinations.length !== 1 ? 's' : ''}
           </p>
-          <p className="text-cyan-200 text-sm mt-1">Hi, {user?.username}! 👋</p>
+          <p className="text-cyan-200 text-sm mt-1">Hi, {(user as {displayName?: string; username?: string})?.displayName || user?.username}! 👋</p>
         </div>
 
         {destinations.length === 0 ? (

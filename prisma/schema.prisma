@@ -36,6 +36,7 @@ model DestinationMedia {
 model Participant {
   id           String    @id @default(cuid())
   username     String    @unique
+  displayName  String    @default("")
   passwordHash String
   voteCount    Int       @default(1)
   createdAt    DateTime  @default(now())

@@ -26,6 +26,7 @@ export async function GET() {
     participants.map((p) => ({
       id: p.id,
       username: p.username,
+      displayName: p.displayName || '',
       voteCount: p.voteCount,
       votesUsed: p._count.votes,
       remainingVotes: p.voteCount - p._count.votes,
@@ -38,7 +39,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { username, password, voteCount } = await req.json()
+  const { username, password, displayName, voteCount } = await req.json()
 
   if (!username || !password) {
     return NextResponse.json({ error: 'Username and password required' }, { status: 400 })
@@ -53,10 +54,11 @@ export async function POST(req: NextRequest) {
   const participant = await prisma.participant.create({
     data: {
       username,
+      displayName: displayName || '',
       passwordHash,
       voteCount: voteCount ?? 1,
     },
   })
 
-  return NextResponse.json({ id: participant.id, username: participant.username, voteCount: participant.voteCount }, { status: 201 })
+  return NextResponse.json({ id: participant.id, username: participant.username, displayName: participant.displayName, voteCount: participant.voteCount }, { status: 201 })
 }

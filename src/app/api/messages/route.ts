@@ -44,10 +44,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Only participants can send messages' }, { status: 403 })
   }
 
+  const participant = await prisma.participant.findUnique({ where: { id: participantId }, select: { displayName: true, username: true } })
+  const authorName = participant?.displayName || participant?.username || session.username!
+
   const message = await prisma.message.create({
     data: {
       participantId,
-      username: session.username!,
+      username: authorName,
       content: content.trim(),
       destinationId: destinationId || null,
     },

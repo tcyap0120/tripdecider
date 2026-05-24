@@ -27,6 +27,7 @@ interface UserInfo {
   isLoggedIn: boolean
   userId?: string
   username?: string
+  displayName?: string
   voteCount?: number
   votesUsed?: number
   remainingVotes?: number
@@ -189,7 +190,7 @@ export default function VotePage() {
             <span className="text-xl sm:text-2xl flex-shrink-0">🏝️</span>
             <div className="min-w-0">
               <h1 className="font-display font-bold text-white text-base sm:text-lg leading-none truncate">TripDecider</h1>
-              <p className="text-cyan-200 text-xs truncate">Hi, {user?.username}! 👋</p>
+              <p className="text-cyan-200 text-xs truncate">Hi, {user?.displayName || user?.username}! 👋</p>
             </div>
           </div>
 
@@ -199,6 +200,9 @@ export default function VotePage() {
                 <span>🏆</span><span className="hidden sm:inline">Results</span>
               </a>
             )}
+            <a href="/discussion" className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3 flex items-center gap-1">
+              <span>💬</span><span className="hidden sm:inline">Chat</span>
+            </a>
             {votingOpen && (
               <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 ${
                 (user?.remainingVotes ?? 0) > 0 ? 'bg-amber-400 text-amber-900' : 'bg-slate-400/80 text-white'

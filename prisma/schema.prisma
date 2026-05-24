@@ -44,6 +44,7 @@ model Participant {
   createdAt    DateTime  @default(now())
   votes        Vote[]
   messages     Message[]
+  dateVotes    DateVote[]
 }
 
 model Vote {
@@ -60,6 +61,26 @@ model Vote {
 model Settings {
   key   String @id
   value String
+}
+
+model DateOption {
+  id        String     @id @default(cuid())
+  date      String
+  label     String     @default("")
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+  votes     DateVote[]
+}
+
+model DateVote {
+  id            String      @id @default(cuid())
+  participantId String
+  dateOptionId  String
+  createdAt     DateTime    @default(now())
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  dateOption    DateOption  @relation(fields: [dateOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([participantId, dateOptionId])
 }
 
 model Message {

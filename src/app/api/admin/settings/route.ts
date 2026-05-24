@@ -21,6 +21,7 @@ export async function GET() {
     resultsPublic: settings['resultsPublic'] === 'true',
     votingOpen: settings['votingOpen'] !== 'false',
     announcement: settings['announcement'] || '',
+    dateVotingOpen: settings['dateVotingOpen'] === 'true',
   })
 }
 

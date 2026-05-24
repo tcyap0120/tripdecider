@@ -55,12 +55,12 @@ export default function LoginPage() {
           <div className="text-center mb-6">
             <div className="inline-block text-6xl mb-3 animate-float">🏝️</div>
             <h2 className="text-3xl font-display font-bold text-white mb-1">Welcome!</h2>
-            <div className="flex justify-center gap-2 mt-2 text-xl">
+            <div className="flex flex-wrap justify-center gap-2 mt-2 text-xl">
               <span>🌴</span><span>🏖️</span><span>🗺️</span><span>🌏</span><span>🎒</span>
             </div>
           </div>
 
-          <div className="glass-card p-8">
+          <div className="glass-card p-5 sm:p-8">
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Username</label>

@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import TravelFooter from '@/components/TravelFooter'
 
 interface Message {
   id: string
@@ -164,7 +163,7 @@ export default function DiscussionPage() {
   ]
 
   return (
-    <div className="travel-bg min-h-screen flex flex-col">
+    <div className="travel-bg flex flex-col" style={{ height: '100dvh', minHeight: '0' }}>
       <div className="floating-orb w-64 h-64 bg-cyan-300 -top-20 -left-20 fixed pointer-events-none" />
       <div className="floating-orb w-80 h-80 bg-teal-300 -bottom-20 -right-20 fixed pointer-events-none" style={{ animationDelay: '3s' }} />
 
@@ -208,7 +207,7 @@ export default function DiscussionPage() {
       </header>
 
       {/* Messages */}
-      <div className="flex-1 flex flex-col max-w-2xl w-full mx-auto px-4 py-4 relative z-10 min-h-0">
+      <div className="flex-1 flex flex-col max-w-2xl w-full mx-auto px-4 pt-3 pb-2 relative z-10 min-h-0 overflow-hidden">
         {activeDestName && (
           <div className="mb-3 text-center">
             <span className="text-white/60 text-xs bg-white/10 px-3 py-1 rounded-full">
@@ -221,7 +220,7 @@ export default function DiscussionPage() {
           ref={scrollRef}
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto space-y-3 pb-2"
-          style={{ minHeight: 0, maxHeight: 'calc(100vh - 230px)' }}
+          style={{ minHeight: 0 }}
         >
           {activeMessages.length === 0 ? (
             <div className="glass-card p-10 text-center mt-4">
@@ -264,7 +263,6 @@ export default function DiscussionPage() {
           </form>
           <p className="text-white/30 text-xs text-right mt-1 pr-1">{input.length}/500 · Shift+Enter for new line</p>
         </div>
-        <TravelFooter />
       </div>
     </div>
   )

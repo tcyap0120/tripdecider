@@ -141,6 +141,7 @@ export default function MemoriesPage() {
                 <img
                   src={mem.photoUrl}
                   alt={mem.caption || 'Memory'}
+                  loading="lazy"
                   className="w-full object-cover group-hover:scale-105 transition-transform duration-500"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                 />

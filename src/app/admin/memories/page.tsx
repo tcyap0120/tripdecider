@@ -14,7 +14,7 @@ function compressImage(file: File): Promise<string> {
     reader.onload = (e) => {
       const img = new Image()
       img.onload = () => {
-        const MAX = 1200
+        const MAX = 1024
         let { width, height } = img
         if (width > MAX || height > MAX) {
           if (width > height) { height = Math.round((height / width) * MAX); width = MAX }
@@ -23,7 +23,7 @@ function compressImage(file: File): Promise<string> {
         const canvas = document.createElement('canvas')
         canvas.width = width; canvas.height = height
         canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
-        resolve(canvas.toDataURL('image/jpeg', 0.82))
+        resolve(canvas.toDataURL('image/jpeg', 0.75))
       }
       img.onerror = reject
       img.src = e.target!.result as string
@@ -31,6 +31,19 @@ function compressImage(file: File): Promise<string> {
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
+}
+
+async function uploadPhoto(dataUrl: string, filename: string): Promise<string> {
+  const res = await fetch('/api/admin/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dataUrl, filename }),
+  })
+  if (res.ok) {
+    const d = await res.json()
+    return d.url
+  }
+  return dataUrl
 }
 
 export default function AdminMemoriesPage() {
@@ -112,11 +125,13 @@ export default function AdminMemoriesPage() {
   async function handleUpload() {
     if (queue.length === 0) return
     setUploading(true)
-    for (const item of queue) {
+    for (let i = 0; i < queue.length; i++) {
+      const item = queue[i]
+      const blobUrl = await uploadPhoto(item.dataUrl, `memory-${Date.now()}-${i}.jpg`)
       await fetch('/api/admin/memories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ photoUrl: item.dataUrl, caption: item.caption }),
+        body: JSON.stringify({ photoUrl: blobUrl, caption: item.caption }),
       })
     }
     setQueue([])

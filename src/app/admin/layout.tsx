@@ -69,19 +69,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Nav tabs */}
-        <div className="max-w-7xl mx-auto px-4 flex gap-1 mt-3">
+        <div className="max-w-7xl mx-auto px-4 flex gap-1 mt-3 overflow-x-auto no-scrollbar">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all ${
+              className={`flex-shrink-0 flex items-center gap-1 px-2.5 sm:px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all whitespace-nowrap ${
                 pathname === item.href
                   ? 'bg-slate-50 text-indigo-700 shadow-sm'
                   : 'text-white/80 hover:bg-white/15 hover:text-white'
               }`}
             >
               <span>{item.icon}</span>
-              {item.label}
+              <span className="hidden sm:inline">{item.label}</span>
             </Link>
           ))}
         </div>

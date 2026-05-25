@@ -22,7 +22,20 @@ interface Destination {
 
 const empty = () => ({ name: '', description: '', accommodationPrice: '', otherPrice: '', photoUrl: '', link: '', details: '', tags: '', days: '', nights: '' })
 
-async function compressImage(file: File, maxWidth = 1400, quality = 0.82): Promise<string> {
+async function uploadPhoto(dataUrl: string, filename: string): Promise<string> {
+  const res = await fetch('/api/admin/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dataUrl, filename }),
+  })
+  if (res.ok) {
+    const d = await res.json()
+    return d.url
+  }
+  return dataUrl
+}
+
+async function compressImage(file: File, maxWidth = 1024, quality = 0.75): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onerror = reject
@@ -198,8 +211,18 @@ export default function DestinationsPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setError(''); setSaveProgress('')
 
+    if (!form.name.trim()) { setError('Destination name is required'); setSaving(false); return }
+
+    // Upload cover photo to blob if it's a data URL
+    let photoUrl = form.photoUrl
+    if (photoUrl.startsWith('data:')) {
+      setSaveProgress('Uploading cover photo...')
+      photoUrl = await uploadPhoto(photoUrl, `cover-${Date.now()}.jpg`)
+    }
+
     const body = {
       ...form,
+      photoUrl,
       accommodationPrice: parseFloat(form.accommodationPrice) || 0,
       otherPrice: parseFloat(form.otherPrice) || 0,
       currency: 'MYR',
@@ -208,8 +231,6 @@ export default function DestinationsPage() {
       nights: parseInt(form.nights) || 0,
     }
 
-    if (!form.name.trim()) { setError('Destination name is required'); setSaving(false); return }
-
     const url = editing ? `/api/admin/destinations/${editing.id}` : '/api/admin/destinations'
     const res = await fetch(url, { method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     if (!res.ok) { const d = await res.json(); setError(d.error || 'Failed to save'); setSaving(false); return }
@@ -217,15 +238,16 @@ export default function DestinationsPage() {
     const saved = await res.json()
     const destId = saved.id
 
-    // Upload queued gallery photos
+    // Upload queued gallery photos to blob
     if (galleryQueue.length > 0) {
       for (let i = 0; i < galleryQueue.length; i++) {
         const item = galleryQueue[i]
         setSaveProgress(`Uploading photo ${i + 1} of ${galleryQueue.length}...`)
+        const blobUrl = await uploadPhoto(item.dataUrl, item.name || `gallery-${Date.now()}.jpg`)
         await fetch('/api/admin/media', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ destinationId: destId, photoUrl: item.dataUrl, caption: item.caption }),
+          body: JSON.stringify({ destinationId: destId, photoUrl: blobUrl, caption: item.caption }),
         })
       }
     }
@@ -242,10 +264,14 @@ export default function DestinationsPage() {
     e.preventDefault()
     if (!galleryDest || !galleryPhotoUrl) return
     setAddingMedia(true)
+    let photoUrl = galleryPhotoUrl
+    if (photoUrl.startsWith('data:')) {
+      photoUrl = await uploadPhoto(photoUrl, `gallery-${Date.now()}.jpg`)
+    }
     await fetch('/api/admin/media', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ destinationId: galleryDest.id, photoUrl: galleryPhotoUrl, caption: galleryCaption }),
+      body: JSON.stringify({ destinationId: galleryDest.id, photoUrl, caption: galleryCaption }),
     })
     await load()
     setGalleryPhotoUrl(''); setGalleryCaption('')
@@ -506,7 +532,7 @@ export default function DestinationsPage() {
                     <p className="text-xs font-medium text-slate-500 mb-2">Existing gallery ({editing.media.length} photos) — manage via 📸 Gallery button</p>
                     <div className="flex gap-2 overflow-x-auto pb-1">
                       {editing.media.map((m) => (
-                        <img key={m.id} src={m.photoUrl} alt={m.caption} className="h-14 w-20 flex-shrink-0 object-cover rounded-lg border border-slate-200"
+                        <img key={m.id} src={m.photoUrl} alt={m.caption} loading="lazy" className="h-14 w-20 flex-shrink-0 object-cover rounded-lg border border-slate-200"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                       ))}
                     </div>
@@ -581,7 +607,7 @@ export default function DestinationsPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {galleryDest.media.map((item) => (
                     <div key={item.id} className="relative group rounded-xl overflow-hidden border border-slate-100">
-                      <img src={item.photoUrl} alt={item.caption || 'Gallery'} className="w-full h-28 object-cover"
+                      <img src={item.photoUrl} alt={item.caption || 'Gallery'} loading="lazy" className="w-full h-28 object-cover"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                       {item.caption && (
                         <div className="bg-black/60 text-white text-xs px-2 py-1 absolute bottom-0 left-0 right-0 truncate">{item.caption}</div>

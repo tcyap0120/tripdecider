@@ -428,7 +428,7 @@ export default function VotePage() {
                                   {dest.media.map((item) => (
                                     <div key={item.id} className="rounded-xl overflow-hidden border border-slate-100">
                                       <img src={item.photoUrl} alt={item.caption || dest.name}
-                                        className="w-full h-24 object-cover"
+                                        className="w-full h-24 object-cover" loading="lazy"
                                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                                       {item.caption && (
                                         <p className="text-xs text-slate-500 px-2 py-1 truncate">{item.caption}</p>

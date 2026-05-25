@@ -60,6 +60,7 @@ export default function VotePage() {
   const [pending, setPending] = useState<Set<string>>(new Set())
   const [submitting, setSubmitting] = useState(false)
   const [justSubmitted, setJustSubmitted] = useState(false)
+  const [editMode, setEditMode] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   // Discussion state
@@ -142,6 +143,7 @@ export default function VotePage() {
       ...toRemove.map((id) => fetch('/api/votes', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destinationId: id }) })),
     ])
     setJustSubmitted(true)
+    setEditMode(false)
     await loadData()
     setSubmitting(false)
     setTimeout(() => setJustSubmitted(false), 3000)
@@ -186,6 +188,8 @@ export default function VotePage() {
   const topDest = sortedByVotes[0]
   const showResults = appSettings.resultsPublic
   const votingOpen = appSettings.votingOpen
+  const hasSubmitted = (user?.votesUsed ?? 0) > 0 && (user?.votesUsed ?? 0) >= (user?.voteCount ?? 1)
+  const isLocked = votingOpen && hasSubmitted && !editMode
 
   function formatTime(ts: string) {
     const d = new Date(ts)
@@ -242,10 +246,10 @@ export default function VotePage() {
             </a>
             {votingOpen && (
               <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 ${
-                pending.size >= (user?.voteCount ?? 0) ? 'bg-emerald-400 text-emerald-900' : 'bg-amber-400 text-amber-900'
+                isLocked ? 'bg-emerald-400 text-emerald-900' : pending.size >= (user?.voteCount ?? 0) ? 'bg-emerald-400 text-emerald-900' : 'bg-amber-400 text-amber-900'
               }`}>
-                <span>🗳️</span>
-                <span className="whitespace-nowrap">{pending.size}/{user?.voteCount ?? 0}</span>
+                <span>{isLocked ? '✅' : '🗳️'}</span>
+                <span className="whitespace-nowrap">{isLocked ? 'Voted' : `${pending.size}/${user?.voteCount ?? 0}`}</span>
               </div>
             )}
             <button onClick={handleLogout} className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3">
@@ -257,14 +261,16 @@ export default function VotePage() {
         {/* Vote progress */}
         <div className="max-w-6xl mx-auto px-3 sm:px-4 pb-2">
           <div className="text-xs text-cyan-200 mb-1">
-            {pending.size === (user?.voteCount ?? 0)
+            {isLocked
+              ? `✅ You've submitted ${user?.voteCount} vote${(user?.voteCount ?? 1) !== 1 ? 's' : ''} · scroll down to edit`
+              : pending.size === (user?.voteCount ?? 0)
               ? `✅ All ${user?.voteCount} selected — hit Submit to confirm!`
               : `Select ${(user?.voteCount ?? 0) - pending.size} more destination${(user?.voteCount ?? 0) - pending.size !== 1 ? 's' : ''} to continue`}
           </div>
           <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all duration-500"
-              style={{ width: `${(pending.size / (user?.voteCount ?? 1)) * 100}%` }}
+              className={`h-full rounded-full transition-all duration-500 ${isLocked ? 'bg-gradient-to-r from-emerald-400 to-green-400' : 'bg-gradient-to-r from-amber-400 to-orange-400'}`}
+              style={{ width: isLocked ? '100%' : `${(pending.size / (user?.voteCount ?? 1)) * 100}%` }}
             />
           </div>
         </div>
@@ -277,6 +283,23 @@ export default function VotePage() {
           <div className="mb-5 flex items-start gap-3 bg-white/20 backdrop-blur border border-white/30 rounded-2xl px-4 py-3.5 text-white shadow-lg animate-fade-in">
             <span className="text-xl flex-shrink-0 mt-0.5">📢</span>
             <p className="text-sm sm:text-base leading-relaxed font-medium">{appSettings.announcement}</p>
+          </div>
+        )}
+
+        {/* Already submitted banner */}
+        {isLocked && (
+          <div className="mb-5 flex items-center gap-3 bg-emerald-500/20 backdrop-blur border border-emerald-400/40 rounded-2xl px-4 py-3.5 text-white shadow-lg animate-fade-in">
+            <span className="text-xl flex-shrink-0">✅</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm sm:text-base leading-tight">Your votes are submitted!</p>
+              <p className="text-white/60 text-xs mt-0.5">Changed your mind? You can still update your choices.</p>
+            </div>
+            <button
+              onClick={() => setEditMode(true)}
+              className="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-all active:scale-95 whitespace-nowrap"
+            >
+              ✏️ Edit votes
+            </button>
           </div>
         )}
 
@@ -494,7 +517,19 @@ export default function VotePage() {
                   })()}
 
                   {/* Vote button */}
-                  {votingOpen ? (
+                  {!votingOpen ? (
+                    <div className="w-full py-3 rounded-xl font-semibold text-sm bg-slate-100 text-slate-400 flex items-center justify-center gap-2">
+                      {dest.hasVoted ? <><span>✅</span> You voted for this</> : <><span>🔒</span> Voting closed</>}
+                    </div>
+                  ) : isLocked ? (
+                    <div className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 ${
+                      dest.hasVoted
+                        ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-200'
+                        : 'bg-slate-100 text-slate-400'
+                    }`}>
+                      {dest.hasVoted ? <><span>✅</span> Your vote</> : <><span>—</span> Not selected</>}
+                    </div>
+                  ) : (
                     <button
                       onClick={() => handleTogglePending(dest.id)}
                       disabled={submitting || (!pending.has(dest.id) && pending.size >= (user?.voteCount ?? 0))}
@@ -514,10 +549,6 @@ export default function VotePage() {
                         <><span>+</span> Select this</>
                       )}
                     </button>
-                  ) : (
-                    <div className="w-full py-3 rounded-xl font-semibold text-sm bg-slate-100 text-slate-400 flex items-center justify-center gap-2">
-                      {dest.hasVoted ? <><span>✅</span> You voted for this</> : <><span>🔒</span> Voting closed</>}
-                    </div>
                   )}
                 </div>
 
@@ -636,8 +667,8 @@ export default function VotePage() {
         </div>
       )}
 
-      {/* Sticky submit bar */}
-      {votingOpen && (
+      {/* Sticky submit bar — only visible when not locked */}
+      {votingOpen && !isLocked && (
         <div className="fixed bottom-20 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
           <div className="pointer-events-auto bg-white/95 backdrop-blur-md shadow-2xl border border-slate-200 rounded-2xl px-4 py-3 flex items-center gap-3 w-full max-w-sm">
             <div className="flex-1 min-w-0">
@@ -652,6 +683,14 @@ export default function VotePage() {
                   : 'Ready — confirm your choices'}
               </p>
             </div>
+            {editMode && (
+              <button
+                onClick={() => { setEditMode(false); setPending(new Set(destinations.filter((d) => d.hasVoted).map((d) => d.id))) }}
+                className="flex-shrink-0 text-slate-400 hover:text-slate-600 text-xs font-semibold px-3 py-2.5 rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+            )}
             <button
               onClick={handleSubmitVotes}
               disabled={pending.size !== (user?.voteCount ?? 0) || submitting}

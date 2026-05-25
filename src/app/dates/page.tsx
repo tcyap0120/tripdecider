@@ -109,6 +109,9 @@ export default function DatesPage() {
             <Link href="/vote" className="btn-ghost text-xs py-1 px-2 sm:px-3 flex items-center gap-1">
               <span>🗳️</span><span className="hidden sm:inline">Vote</span>
             </Link>
+            <Link href="/memories" className="btn-ghost text-xs py-1 px-2 sm:px-3 flex items-center gap-1">
+              <span>📸</span><span className="hidden sm:inline">Memories</span>
+            </Link>
             <Link href="/discussion" className="btn-ghost text-xs py-1 px-2 sm:px-3 flex items-center gap-1">
               <span>💬</span><span className="hidden sm:inline">Discussion</span>
             </Link>

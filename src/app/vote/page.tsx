@@ -224,6 +224,9 @@ export default function VotePage() {
             <a href="/dates" className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3 flex items-center gap-1">
               <span>📅</span><span className="hidden sm:inline">Dates</span>
             </a>
+            <a href="/memories" className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3 flex items-center gap-1">
+              <span>📸</span><span className="hidden sm:inline">Memories</span>
+            </a>
             <a href="/discussion" className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3 flex items-center gap-1">
               <span>💬</span><span className="hidden sm:inline">Discussion</span>
             </a>

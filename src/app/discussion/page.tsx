@@ -180,6 +180,7 @@ export default function DiscussionPage() {
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link href="/vote" className="btn-ghost text-xs py-1 px-2 sm:px-3 flex items-center gap-1"><span>🗳️</span><span className="hidden sm:inline">Vote</span></Link>
             <Link href="/dates" className="btn-ghost text-xs py-1 px-2 sm:px-3 flex items-center gap-1"><span>📅</span><span className="hidden sm:inline">Dates</span></Link>
+            <Link href="/memories" className="btn-ghost text-xs py-1 px-2 sm:px-3 flex items-center gap-1"><span>📸</span><span className="hidden sm:inline">Memories</span></Link>
             <button onClick={handleLogout} className="btn-ghost text-xs py-1 px-2 sm:px-3">Out</button>
           </div>
         </div>

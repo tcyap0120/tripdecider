@@ -72,6 +72,13 @@ model DateOption {
   votes     DateVote[]
 }
 
+model Memory {
+  id        String   @id @default(cuid())
+  photoUrl  String
+  caption   String   @default("")
+  createdAt DateTime @default(now())
+}
+
 model DateVote {
   id            String      @id @default(cuid())
   participantId String

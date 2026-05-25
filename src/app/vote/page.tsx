@@ -213,7 +213,7 @@ export default function VotePage() {
   }
 
   return (
-    <div className="travel-bg min-h-screen pb-24">
+    <div className={`travel-bg min-h-screen ${votingOpen && !isLocked ? 'pb-52' : 'pb-24'}`}>
       {/* Background orbs */}
       <div className="floating-orb w-64 h-64 bg-cyan-300 -top-20 -left-20 fixed pointer-events-none" />
       <div className="floating-orb w-80 h-80 bg-teal-300 -bottom-20 -right-20 fixed pointer-events-none" style={{ animationDelay: '4s' }} />

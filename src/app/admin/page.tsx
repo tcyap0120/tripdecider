@@ -10,6 +10,7 @@ interface Destination {
   price: number
   currency: string
   media: { id: string; photoUrl: string }[]
+  voters: string[]
 }
 
 interface Participant {
@@ -255,7 +256,7 @@ export default function AdminDashboard() {
         ) : (
           <div className="space-y-4">
             {sortedDestinations.map((dest, idx) => (
-              <div key={dest.id} className="flex items-center gap-3 sm:gap-4">
+              <div key={dest.id} className="relative flex items-center gap-3 sm:gap-4 group">
                 <div className="w-8 text-center font-bold text-slate-400 text-sm flex-shrink-0">
                   {idx === 0 && totalVotes > 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
                 </div>
@@ -287,6 +288,20 @@ export default function AdminDashboard() {
                 <div className="text-xs text-slate-400 w-9 text-right flex-shrink-0">
                   {totalVotes > 0 ? `${Math.round((dest.voteCount / totalVotes) * 100)}%` : '0%'}
                 </div>
+
+                {/* Voter tooltip */}
+                {dest.voters.length > 0 && (
+                  <div className="absolute left-8 top-full mt-1.5 z-20 hidden group-hover:block pointer-events-none">
+                    <div className="bg-slate-800 text-white text-xs rounded-xl px-3 py-2.5 shadow-xl min-w-[140px] max-w-[240px]">
+                      <p className="font-semibold text-white/60 mb-1.5 uppercase tracking-wide text-[10px]">Voted by</p>
+                      <div className="flex flex-wrap gap-1">
+                        {dest.voters.map((name) => (
+                          <span key={name} className="bg-white/15 px-2 py-0.5 rounded-full whitespace-nowrap">{name}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

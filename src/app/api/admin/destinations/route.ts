@@ -15,7 +15,11 @@ export async function GET() {
 
   const destinations = await prisma.destination.findMany({
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-    include: { _count: { select: { votes: true } }, media: { orderBy: { createdAt: 'asc' } } },
+    include: {
+      _count: { select: { votes: true } },
+      media: { orderBy: { createdAt: 'asc' } },
+      votes: { include: { participant: { select: { displayName: true, username: true } } } },
+    },
   })
 
   return NextResponse.json(
@@ -23,6 +27,7 @@ export async function GET() {
       ...d,
       tags: d.tags ? d.tags.split(',').filter(Boolean) : [],
       voteCount: d._count.votes,
+      voters: d.votes.map((v) => v.participant.displayName || v.participant.username),
     }))
   )
 }

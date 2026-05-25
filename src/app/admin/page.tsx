@@ -78,6 +78,7 @@ export default function AdminDashboard() {
   const totalVotes = destinations.reduce((s, d) => s + d.voteCount, 0)
   const totalVoteCapacity = participants.reduce((s, p) => s + p.voteCount, 0)
   const totalVotesUsed = participants.reduce((s, p) => s + p.votesUsed, 0)
+  const participantsVoted = participants.filter((p) => p.voteCount > 0 && p.votesUsed >= p.voteCount).length
   const sortedDestinations = [...destinations].sort((a, b) => b.voteCount - a.voteCount)
   const winner = sortedDestinations[0]
 
@@ -208,7 +209,7 @@ export default function AdminDashboard() {
         {[
           { label: 'Destinations', value: destinations.length, icon: '🗺️', color: 'from-sky-500 to-cyan-500' },
           { label: 'Participants', value: participants.length, icon: '👥', color: 'from-violet-500 to-purple-500' },
-          { label: 'Votes Cast', value: totalVotesUsed, icon: '🗳️', color: 'from-orange-500 to-amber-500' },
+          { label: 'Voted', value: `${participantsVoted}/${participants.length}`, icon: '🗳️', color: 'from-orange-500 to-amber-500' },
           { label: 'Vote Capacity', value: totalVoteCapacity, icon: '📊', color: 'from-teal-500 to-emerald-500' },
         ].map((stat) => (
           <div key={stat.label} className={`bg-gradient-to-br ${stat.color} rounded-2xl p-5 text-white shadow-lg`}>

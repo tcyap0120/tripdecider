@@ -42,9 +42,10 @@ model Participant {
   passwordHash String
   voteCount    Int       @default(1)
   createdAt    DateTime  @default(now())
-  votes        Vote[]
-  messages     Message[]
-  dateVotes    DateVote[]
+  votes          Vote[]
+  messages       Message[]
+  dateVotes      DateVote[]
+  memoryComments MemoryComment[]
 }
 
 model Vote {
@@ -73,10 +74,22 @@ model DateOption {
 }
 
 model Memory {
-  id        String   @id @default(cuid())
+  id        String          @id @default(cuid())
   photoUrl  String
-  caption   String   @default("")
-  createdAt DateTime @default(now())
+  caption   String          @default("")
+  createdAt DateTime        @default(now())
+  comments  MemoryComment[]
+}
+
+model MemoryComment {
+  id            String      @id @default(cuid())
+  memoryId      String
+  participantId String
+  username      String
+  content       String
+  createdAt     DateTime    @default(now())
+  memory        Memory      @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 }
 
 model DateVote {

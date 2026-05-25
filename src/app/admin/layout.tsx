@@ -57,10 +57,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/vote" target="_blank"
-              className="flex items-center gap-1.5 text-sm font-medium bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 rounded-xl transition-all">
-              👁️ Preview
-            </Link>
             <button onClick={handleLogout}
               className="flex items-center gap-1.5 text-sm font-medium bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 rounded-xl transition-all">
               Logout

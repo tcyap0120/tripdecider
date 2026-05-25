@@ -164,20 +164,20 @@ export default function MemoriesPage() {
       <div className="floating-orb w-80 h-80 bg-rose-300 -bottom-20 -right-20 fixed pointer-events-none" style={{ animationDelay: '3s' }} />
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xl flex-shrink-0">📸</span>
+      <header className="sticky top-0 z-40 bg-gradient-to-r from-black/20 to-black/10 backdrop-blur-xl border-b border-white/15 shadow-lg">
+        <div className="max-w-5xl mx-auto px-3 sm:px-5 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-lg shadow-inner border border-white/20 flex-shrink-0">📸</div>
             <div className="min-w-0">
-              <h1 className="font-display font-bold text-white text-base leading-none">Memories</h1>
-              <p className="text-cyan-200 text-xs truncate">Hi, {user?.displayName || user?.username}! 👋</p>
+              <h1 className="font-display font-extrabold text-white text-base leading-none tracking-tight">Our <span className="text-pink-300">Memories</span></h1>
+              <p className="text-white/55 text-xs truncate mt-0.5">Hi, {user?.displayName || user?.username}! 👋</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <Link href="/vote" className="btn-ghost text-xs py-1 px-2 sm:px-3 flex items-center gap-1"><span>🗳️</span><span className="hidden sm:inline">Vote</span></Link>
-            <Link href="/dates" className="btn-ghost text-xs py-1 px-2 sm:px-3 flex items-center gap-1"><span>📅</span><span className="hidden sm:inline">Dates</span></Link>
-            <Link href="/discussion" className="btn-ghost text-xs py-1 px-2 sm:px-3 flex items-center gap-1"><span>💬</span><span className="hidden sm:inline">Chat</span></Link>
-            <button onClick={handleLogout} className="btn-ghost text-xs py-1 px-2 sm:px-3">Out</button>
+            <Link href="/vote" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all"><span>🗳️</span><span className="hidden sm:inline">Vote</span></Link>
+            <Link href="/dates" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all"><span>📅</span><span className="hidden sm:inline">Dates</span></Link>
+            <Link href="/discussion" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all"><span>💬</span><span className="hidden sm:inline">Chat</span></Link>
+            <button onClick={handleLogout} className="flex items-center gap-1.5 bg-white/10 hover:bg-red-400/30 border border-white/20 hover:border-red-300/40 text-white/80 hover:text-red-100 font-medium text-xs px-3 py-1.5 rounded-full transition-all"><span>🚪</span><span className="hidden sm:inline">Log Out</span></button>
           </div>
         </div>
       </header>

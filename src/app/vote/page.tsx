@@ -219,41 +219,43 @@ export default function VotePage() {
       <div className="floating-orb w-80 h-80 bg-teal-300 -bottom-20 -right-20 fixed pointer-events-none" style={{ animationDelay: '4s' }} />
 
       {/* ── HEADER ── */}
-      <header className="sticky top-0 z-40 bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xl sm:text-2xl flex-shrink-0">🏝️</span>
+      <header className="sticky top-0 z-40 bg-gradient-to-r from-black/20 to-black/10 backdrop-blur-xl border-b border-white/15 shadow-lg">
+        <div className="max-w-6xl mx-auto px-3 sm:px-5 py-3 flex items-center justify-between gap-3">
+          {/* Brand */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-lg shadow-inner border border-white/20 flex-shrink-0">🏝️</div>
             <div className="min-w-0">
-              <h1 className="font-display font-bold text-white text-base sm:text-lg leading-none truncate">TripDecider</h1>
-              <p className="text-cyan-200 text-xs truncate">Hi, {user?.displayName || user?.username}! 👋</p>
+              <h1 className="font-display font-extrabold text-white text-base leading-none tracking-tight">Trip<span className="text-cyan-300">Decider</span></h1>
+              <p className="text-white/55 text-xs truncate mt-0.5">Hi, {user?.displayName || user?.username}! 👋</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Nav */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {showResults && (
-              <a href="/results" className="bg-amber-400 text-amber-900 font-bold text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl flex items-center gap-1 hover:bg-amber-500 transition-colors">
+              <a href="/results" className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold text-xs px-3 py-1.5 rounded-full transition-all shadow-sm">
                 <span>🏆</span><span className="hidden sm:inline">Results</span>
               </a>
             )}
-            <a href="/dates" className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3 flex items-center gap-1">
+            <a href="/dates" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
               <span>📅</span><span className="hidden sm:inline">Dates</span>
             </a>
-            <a href="/memories" className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3 flex items-center gap-1">
+            <a href="/memories" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
               <span>📸</span><span className="hidden sm:inline">Memories</span>
             </a>
-            <a href="/discussion" className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3 flex items-center gap-1">
+            <a href="/discussion" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
               <span>💬</span><span className="hidden sm:inline">Discussion</span>
             </a>
             {votingOpen && (
-              <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 ${
-                isLocked ? 'bg-emerald-400 text-emerald-900' : pending.size >= (user?.voteCount ?? 0) ? 'bg-emerald-400 text-emerald-900' : 'bg-amber-400 text-amber-900'
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0 shadow-sm ${
+                isLocked || pending.size >= (user?.voteCount ?? 0) ? 'bg-emerald-400 text-emerald-900' : 'bg-amber-400 text-amber-900'
               }`}>
                 <span>{isLocked ? '✅' : '🗳️'}</span>
                 <span className="whitespace-nowrap">{isLocked ? 'Voted' : `${pending.size}/${user?.voteCount ?? 0}`}</span>
               </div>
             )}
-            <button onClick={handleLogout} className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3">
-              Out
+            <button onClick={handleLogout} className="flex items-center gap-1.5 bg-white/10 hover:bg-red-400/30 border border-white/20 hover:border-red-300/40 text-white/80 hover:text-red-100 font-medium text-xs px-3 py-1.5 rounded-full transition-all">
+              <span>🚪</span><span className="hidden sm:inline">Log Out</span>
             </button>
           </div>
         </div>

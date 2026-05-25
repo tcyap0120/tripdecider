@@ -57,9 +57,10 @@ export default function VotePage() {
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [appSettings, setAppSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '' })
   const [loading, setLoading] = useState(true)
-  const [voting, setVoting] = useState<string | null>(null)
+  const [pending, setPending] = useState<Set<string>>(new Set())
+  const [submitting, setSubmitting] = useState(false)
+  const [justSubmitted, setJustSubmitted] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [celebration, setCelebration] = useState<string | null>(null)
 
   // Discussion state
   const [messages, setMessages] = useState<Message[]>([])
@@ -84,7 +85,11 @@ export default function VotePage() {
     const meData = await meRes.json()
     if (!meData.isLoggedIn) { router.replace('/login'); return }
     setUser(meData)
-    if (destRes.ok) setDestinations(await destRes.json())
+    if (destRes.ok) {
+      const dests = await destRes.json()
+      setDestinations(dests)
+      setPending(new Set(dests.filter((d: Destination) => d.hasVoted).map((d: Destination) => d.id)))
+    }
     if (settingsRes.ok) setAppSettings(await settingsRes.json())
     setLoading(false)
   }, [router])
@@ -118,23 +123,28 @@ export default function VotePage() {
     }
   }, [chatOpen, messages.length])
 
-  async function handleVote(destId: string, hasVoted: boolean) {
-    if (voting) return
-    setVoting(destId)
-    const res = await fetch('/api/votes', {
-      method: hasVoted ? 'DELETE' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ destinationId: destId }),
+  function handleTogglePending(destId: string) {
+    setPending((prev) => {
+      const next = new Set(prev)
+      if (next.has(destId)) next.delete(destId)
+      else next.add(destId)
+      return next
     })
-    if (res.ok) {
-      const data = await res.json()
-      setUser((u) => u ? { ...u, remainingVotes: data.remainingVotes, votesUsed: (u.voteCount ?? 0) - data.remainingVotes } : u)
-      setDestinations((prev) =>
-        prev.map((d) => d.id === destId ? { ...d, hasVoted: !hasVoted, voteCount: d.voteCount + (hasVoted ? -1 : 1) } : d)
-      )
-      if (!hasVoted) { setCelebration(destId); setTimeout(() => setCelebration(null), 900) }
-    }
-    setVoting(null)
+  }
+
+  async function handleSubmitVotes() {
+    if (submitting || pending.size !== (user?.voteCount ?? 0)) return
+    setSubmitting(true)
+    const toAdd = [...pending].filter((id) => !destinations.find((d) => d.id === id)?.hasVoted)
+    const toRemove = destinations.filter((d) => d.hasVoted && !pending.has(d.id)).map((d) => d.id)
+    await Promise.all([
+      ...toAdd.map((id) => fetch('/api/votes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destinationId: id }) })),
+      ...toRemove.map((id) => fetch('/api/votes', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destinationId: id }) })),
+    ])
+    setJustSubmitted(true)
+    await loadData()
+    setSubmitting(false)
+    setTimeout(() => setJustSubmitted(false), 3000)
   }
 
   async function handleSendMessage(e: React.FormEvent) {
@@ -232,10 +242,10 @@ export default function VotePage() {
             </a>
             {votingOpen && (
               <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs sm:text-sm font-bold flex-shrink-0 ${
-                (user?.remainingVotes ?? 0) > 0 ? 'bg-amber-400 text-amber-900' : 'bg-slate-400/80 text-white'
+                pending.size >= (user?.voteCount ?? 0) ? 'bg-emerald-400 text-emerald-900' : 'bg-amber-400 text-amber-900'
               }`}>
                 <span>🗳️</span>
-                <span className="whitespace-nowrap">{user?.remainingVotes ?? 0} left</span>
+                <span className="whitespace-nowrap">{pending.size}/{user?.voteCount ?? 0}</span>
               </div>
             )}
             <button onClick={handleLogout} className="btn-ghost text-xs py-1 px-2 sm:text-sm sm:px-3">
@@ -247,12 +257,14 @@ export default function VotePage() {
         {/* Vote progress */}
         <div className="max-w-6xl mx-auto px-3 sm:px-4 pb-2">
           <div className="text-xs text-cyan-200 mb-1">
-            Votes: {user?.votesUsed ?? 0} / {user?.voteCount ?? 0}
+            {pending.size === (user?.voteCount ?? 0)
+              ? `✅ All ${user?.voteCount} selected — hit Submit to confirm!`
+              : `Select ${(user?.voteCount ?? 0) - pending.size} more destination${(user?.voteCount ?? 0) - pending.size !== 1 ? 's' : ''} to continue`}
           </div>
           <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all duration-500"
-              style={{ width: `${((user?.votesUsed ?? 0) / (user?.voteCount ?? 1)) * 100}%` }}
+              style={{ width: `${(pending.size / (user?.voteCount ?? 1)) * 100}%` }}
             />
           </div>
         </div>
@@ -311,7 +323,7 @@ export default function VotePage() {
             {destinations.map((dest, idx) => (
               <div
                 key={dest.id}
-                className={`destination-card animate-fade-in ${celebration === dest.id ? 'confetti-burst' : ''}`}
+                className="destination-card animate-fade-in"
                 style={{ animationDelay: `${idx * 0.08}s` }}
               >
                 {/* Photo */}
@@ -324,8 +336,8 @@ export default function VotePage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute top-3 right-3">
-                    <div className={`vote-badge text-xs ${dest.hasVoted ? 'voted-badge' : ''}`}>
-                      <span>{dest.hasVoted ? '✅' : '🗳️'}</span>
+                    <div className={`vote-badge text-xs ${pending.has(dest.id) ? 'voted-badge' : ''}`}>
+                      <span>{pending.has(dest.id) ? '✅' : '🗳️'}</span>
                       {showResults && <span>{dest.voteCount}</span>}
                     </div>
                   </div>
@@ -481,27 +493,25 @@ export default function VotePage() {
                     )
                   })()}
 
-                  {/* Vote button — large touch target */}
+                  {/* Vote button */}
                   {votingOpen ? (
                     <button
-                      onClick={() => handleVote(dest.id, dest.hasVoted)}
-                      disabled={voting !== null || (!dest.hasVoted && (user?.remainingVotes ?? 0) <= 0)}
+                      onClick={() => handleTogglePending(dest.id)}
+                      disabled={submitting || (!pending.has(dest.id) && pending.size >= (user?.voteCount ?? 0))}
                       className={`w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 ${
-                        dest.hasVoted
+                        pending.has(dest.id)
                           ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-600 border-2 border-emerald-200 hover:border-red-200 hover:text-red-500 hover:from-red-50 hover:to-pink-50'
-                          : (user?.remainingVotes ?? 0) <= 0
+                          : pending.size >= (user?.voteCount ?? 0)
                           ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                           : 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-600 hover:to-cyan-600 shadow-md hover:shadow-sky-200'
                       }`}
                     >
-                      {voting === dest.id ? (
-                        <><span className="animate-spin inline-block">⏳</span> Processing...</>
-                      ) : dest.hasVoted ? (
-                        <><span>✅</span> Voted! Tap to remove</>
-                      ) : (user?.remainingVotes ?? 0) <= 0 ? (
-                        <><span>🔒</span> No votes remaining</>
+                      {pending.has(dest.id) ? (
+                        <><span>✅</span> Selected · tap to remove</>
+                      ) : pending.size >= (user?.voteCount ?? 0) ? (
+                        <><span>🔒</span> Selection full</>
                       ) : (
-                        <><span>🗳️</span> Vote for this</>
+                        <><span>+</span> Select this</>
                       )}
                     </button>
                   ) : (
@@ -623,6 +633,33 @@ export default function VotePage() {
               )}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Sticky submit bar */}
+      {votingOpen && (
+        <div className="fixed bottom-20 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">
+          <div className="pointer-events-auto bg-white/95 backdrop-blur-md shadow-2xl border border-slate-200 rounded-2xl px-4 py-3 flex items-center gap-3 w-full max-w-sm">
+            <div className="flex-1 min-w-0">
+              <p className="text-slate-800 font-bold text-sm leading-tight">
+                {pending.size}/{user?.voteCount ?? 0} selected
+              </p>
+              <p className="text-slate-400 text-xs mt-0.5 leading-tight">
+                {justSubmitted
+                  ? '✅ Votes saved!'
+                  : pending.size < (user?.voteCount ?? 0)
+                  ? `Pick ${(user?.voteCount ?? 0) - pending.size} more to submit`
+                  : 'Ready — confirm your choices'}
+              </p>
+            </div>
+            <button
+              onClick={handleSubmitVotes}
+              disabled={pending.size !== (user?.voteCount ?? 0) || submitting}
+              className="flex-shrink-0 bg-gradient-to-r from-sky-500 to-cyan-500 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-md hover:from-sky-600 hover:to-cyan-600 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {submitting ? '⏳' : justSubmitted ? '✅ Saved' : 'Submit →'}
+            </button>
+          </div>
         </div>
       )}
 

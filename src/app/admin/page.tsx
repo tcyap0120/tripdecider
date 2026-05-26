@@ -51,13 +51,15 @@ export default function AdminDashboard() {
     fetch('/api/admin/dashboard')
       .then((r) => r.json())
       .then(({ destinations: dests, participants: parts, settings: s, tierTwo: t2 }) => {
+        if (!dests) return // auth error or malformed response
         setDestinations(dests)
-        setParticipants(parts)
-        setSettings(s)
-        setAnnouncementDraft(s.announcement || '')
-        setTierTwoStats(t2)
+        setParticipants(parts ?? [])
+        setSettings(s ?? { resultsPublic: false, votingOpen: true, announcement: '', tierTwoOpen: false })
+        setAnnouncementDraft(s?.announcement ?? '')
+        setTierTwoStats(t2 ?? null)
         setLoading(false)
       })
+      .catch(() => setLoading(false))
   }, [])
 
   async function toggleSetting(key: 'resultsPublic' | 'votingOpen') {

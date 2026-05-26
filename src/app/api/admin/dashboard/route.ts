@@ -27,9 +27,10 @@ export async function GET() {
       },
     }),
     prisma.settings.findMany(),
+    // graceful fallback if TierTwoVote table not yet migrated in production
     prisma.tierTwoVote.findMany({
       include: { participant: { select: { username: true } } },
-    }),
+    }).catch(() => [] as { destinationId: string; participantId: string; participant: { username: string } }[]),
   ])
 
   const s: Record<string, string> = {}

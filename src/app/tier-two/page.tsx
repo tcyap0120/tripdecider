@@ -186,228 +186,212 @@ export default function TierTwoPage() {
         </div>
 
         {/* ── VERSUS LAYOUT ── */}
-        {destinations.length === 2 && (
-          <div className="flex flex-col md:flex-row items-center gap-5 md:gap-4">
-            {destinations.map((dest, idx) => {
-              const isSelected = selected === dest.id
-              const isVotedFor = data.myVote === dest.id
-              const isOtherSelected = selected !== null && selected !== dest.id && !hasVoted
+        {destinations.length === 2 && (() => {
+          const renderCard = (dest: Destination, idx: number) => {
+            const isSelected = selected === dest.id
+            const isVotedFor = data.myVote === dest.id
+            const isOtherSelected = selected !== null && selected !== dest.id && !hasVoted
+            const accentGrad = idx === 0
+              ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
+              : 'linear-gradient(135deg, #dc2626, #ea580c)'
 
-              return (
-                <div
-                  key={dest.id}
-                  className={`destination-card w-full md:flex-1 animate-fade-in transition-all duration-300 ${
-                    isSelected && !hasVoted ? 'ring-4 shadow-2xl' : ''
-                  } ${hasVoted && !isVotedFor ? 'opacity-55 saturate-50' : ''}`}
-                  style={{
-                    animationDelay: `${idx * 0.15}s`,
-                    ...(isSelected && !hasVoted ? { ringColor: '#a855f7', boxShadow: '0 0 40px rgba(168,85,247,0.4)', outline: '4px solid #a855f7' } : {}),
-                  }}
-                >
-                  {/* Photo */}
-                  <div className="relative h-52 sm:h-64 overflow-hidden rounded-t-2xl">
-                    <img
-                      src={dest.photoUrl || dest.media?.[0]?.photoUrl || `https://picsum.photos/seed/${dest.id}/600/400`}
-                      alt={dest.name}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                      onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${dest.id}/600/400` }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+            return (
+              <div
+                className={`destination-card animate-fade-in transition-all duration-300 ${
+                  hasVoted && !isVotedFor ? 'opacity-55 saturate-50' : ''
+                }`}
+                style={{
+                  animationDelay: `${idx * 0.12}s`,
+                  ...(isSelected && !hasVoted ? { outline: '4px solid #a855f7', boxShadow: '0 0 36px rgba(168,85,247,0.45)' } : {}),
+                }}
+              >
+                {/* Photo */}
+                <div className="relative h-52 sm:h-60 overflow-hidden rounded-t-2xl">
+                  <img
+                    src={dest.photoUrl || dest.media?.[0]?.photoUrl || `https://picsum.photos/seed/${dest.id}/600/400`}
+                    alt={dest.name}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${dest.id}/600/400` }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-                    {/* Finalist label */}
-                    <div className="absolute top-3 left-3">
-                      <div className="text-white text-xs font-bold px-2.5 py-1 rounded-full border border-white/30 backdrop-blur"
-                        style={{ background: idx === 0 ? 'linear-gradient(90deg, rgba(168,85,247,0.7), rgba(99,102,241,0.7))' : 'linear-gradient(90deg, rgba(239,68,68,0.7), rgba(249,115,22,0.7))' }}>
-                        {idx === 0 ? '🟣 Finalist A' : '🔴 Finalist B'}
-                      </div>
-                    </div>
-
-                    {/* Voted/selected badge */}
-                    {(isVotedFor || (isSelected && !hasVoted)) && (
-                      <div className="absolute top-3 right-3">
-                        <div className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                          isVotedFor
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-white text-violet-700'
-                        }`}>
-                          {isVotedFor ? '✅ Your pick' : '🟣 Selected'}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* R2 vote count */}
-                    {data.tierTwoResultsPublic && totalT2Votes > 0 && (
-                      <div className="absolute top-3 right-3" style={{ display: isVotedFor || (isSelected && !hasVoted) ? 'none' : 'block' }}>
-                        <div className="bg-black/50 backdrop-blur text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                          🗳️ {dest.voteCount}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <h3 className="text-white font-display font-bold text-xl sm:text-2xl leading-tight">{dest.name}</h3>
-                      {(dest.days > 0 || dest.nights > 0) && (
-                        <span className="inline-block mt-1 text-xs bg-white/25 backdrop-blur text-white font-bold px-2.5 py-0.5 rounded-full">
-                          {dest.days > 0 ? `${dest.days}D` : ''}{dest.nights > 0 ? `${dest.nights}N` : ''}
-                        </span>
-                      )}
+                  {/* Finalist label */}
+                  <div className="absolute top-3 left-3">
+                    <div className="text-white text-xs font-bold px-2.5 py-1 rounded-full border border-white/30 backdrop-blur"
+                      style={{ background: idx === 0 ? 'linear-gradient(90deg, rgba(168,85,247,0.75), rgba(99,102,241,0.75))' : 'linear-gradient(90deg, rgba(220,38,38,0.75), rgba(249,115,22,0.75))' }}>
+                      {idx === 0 ? '🟣 Finalist A' : '🔴 Finalist B'}
                     </div>
                   </div>
 
-                  {/* Content */}
-                  <div className="p-4">
-                    {/* Price */}
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Est. Cost Per Pax</span>
+                  {/* Voted / selected / vote-count badge */}
+                  <div className="absolute top-3 right-3">
+                    {isVotedFor ? (
+                      <div className="bg-emerald-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">✅ Your pick</div>
+                    ) : (isSelected && !hasVoted) ? (
+                      <div className="bg-white text-violet-700 text-xs font-bold px-2.5 py-1 rounded-full">🟣 Selected</div>
+                    ) : (data.tierTwoResultsPublic && totalT2Votes > 0) ? (
+                      <div className="bg-black/50 backdrop-blur text-white text-xs font-bold px-2.5 py-1 rounded-full">🗳️ {dest.voteCount}</div>
+                    ) : null}
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="text-white font-display font-bold text-lg sm:text-xl leading-snug drop-shadow">{dest.name}</h3>
+                    {(dest.days > 0 || dest.nights > 0) && (
+                      <span className="inline-block mt-1 text-xs bg-white/25 backdrop-blur text-white font-bold px-2.5 py-0.5 rounded-full">
+                        {dest.days > 0 ? `${dest.days}D` : ''}{dest.nights > 0 ? `${dest.nights}N` : ''}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-4">
+                  {/* Price */}
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Est. Cost Per Pax</span>
+                      {dest.link && (
+                        <a
+                          href={dest.link.startsWith('http') ? dest.link : `https://${dest.link}`}
+                          target="_blank" rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1 text-xs font-semibold bg-violet-50 hover:bg-violet-100 text-violet-600 border border-violet-200 px-2.5 py-1 rounded-full transition-colors"
+                        >
+                          🔗 Info
+                        </a>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[6, 8, 10].map((pax) => (
+                        <div key={pax} className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 rounded-xl p-2 text-center">
+                          <div className="text-xs text-slate-500 font-medium">{pax} pax</div>
+                          <div className="text-sm font-display font-bold text-violet-700 leading-tight">
+                            MYR {((dest.accommodationPrice + dest.otherPrice) / pax).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1.5 text-center">
+                      🏨 MYR {dest.accommodationPrice.toLocaleString()} + 🌴 MYR {dest.otherPrice.toLocaleString()}
+                    </p>
+                  </div>
+
+                  {dest.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-3">
+                      {dest.tags.map((tag) => <span key={tag} className="tag-pill">{tag}</span>)}
+                    </div>
+                  )}
+
+                  <p className="text-slate-600 text-sm leading-relaxed mb-3">{dest.description}</p>
+
+                  {/* Expandable details */}
+                  <div className="mb-3">
+                    <button
+                      onClick={() => setExpandedId(expandedId === dest.id ? null : dest.id)}
+                      className="text-violet-500 text-xs font-medium hover:text-violet-700 transition-colors flex items-center gap-1"
+                    >
+                      {expandedId === dest.id ? '▲ Less' : <>▼ More info{dest.media.length > 0 ? ` · 📸 ${dest.media.length}` : ''}</>}
+                    </button>
+                    {expandedId === dest.id && (
+                      <div className="mt-2 animate-fade-in space-y-3">
                         {dest.link && (
                           <a
                             href={dest.link.startsWith('http') ? dest.link : `https://${dest.link}`}
                             target="_blank" rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1 text-xs font-semibold bg-violet-50 hover:bg-violet-100 text-violet-600 border border-violet-200 px-2.5 py-1 rounded-full transition-colors"
+                            className="flex items-center justify-center gap-2 w-full py-2 bg-violet-50 hover:bg-violet-100 text-violet-600 border border-violet-200 rounded-xl text-sm font-semibold transition-colors"
                           >
-                            🔗 Info
+                            🔗 Open Info Page
                           </a>
                         )}
-                      </div>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {[6, 8, 10].map((pax) => {
-                          const perPax = (dest.accommodationPrice + dest.otherPrice) / pax
-                          return (
-                            <div key={pax} className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 rounded-xl p-2 text-center">
-                              <div className="text-xs text-slate-500 font-medium">{pax} pax</div>
-                              <div className="text-sm font-display font-bold text-violet-700 leading-tight">
-                                MYR {perPax.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </div>
+                        {dest.details && (
+                          <div className="text-sm text-slate-600 bg-slate-50 rounded-xl p-3 leading-relaxed">{dest.details}</div>
+                        )}
+                        {dest.media.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 mb-2">📸 Gallery</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {dest.media.map((item) => (
+                                <div key={item.id} className="rounded-xl overflow-hidden border border-slate-100">
+                                  <img src={item.photoUrl} alt={item.caption || dest.name}
+                                    className="w-full h-24 object-cover" loading="lazy"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                  {item.caption && <p className="text-xs text-slate-500 px-2 py-1 truncate">{item.caption}</p>}
+                                </div>
+                              ))}
                             </div>
-                          )
-                        })}
-                      </div>
-                      <p className="text-xs text-slate-400 mt-1.5 text-center">
-                        🏨 MYR {dest.accommodationPrice.toLocaleString()} + 🌴 MYR {dest.otherPrice.toLocaleString()}
-                      </p>
-                    </div>
-
-                    {dest.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-3">
-                        {dest.tags.map((tag) => <span key={tag} className="tag-pill">{tag}</span>)}
-                      </div>
-                    )}
-
-                    <p className="text-slate-600 text-sm leading-relaxed mb-3">{dest.description}</p>
-
-                    {/* Expandable details */}
-                    <div className="mb-3">
-                      <button
-                        onClick={() => setExpandedId(expandedId === dest.id ? null : dest.id)}
-                        className="text-violet-500 text-xs font-medium hover:text-violet-700 transition-colors flex items-center gap-1"
-                      >
-                        {expandedId === dest.id
-                          ? '▲ Less'
-                          : <>▼ More info{dest.media.length > 0 ? ` · 📸 ${dest.media.length}` : ''}</>}
-                      </button>
-                      {expandedId === dest.id && (
-                        <div className="mt-2 animate-fade-in space-y-3">
-                          {dest.link && (
-                            <a
-                              href={dest.link.startsWith('http') ? dest.link : `https://${dest.link}`}
-                              target="_blank" rel="noopener noreferrer"
-                              className="flex items-center justify-center gap-2 w-full py-2 bg-violet-50 hover:bg-violet-100 text-violet-600 border border-violet-200 rounded-xl text-sm font-semibold transition-colors"
-                            >
-                              🔗 Open Info Page
-                            </a>
-                          )}
-                          {dest.details && (
-                            <div className="text-sm text-slate-600 bg-slate-50 rounded-xl p-3 leading-relaxed">{dest.details}</div>
-                          )}
-                          {dest.media.length > 0 && (
-                            <div>
-                              <p className="text-xs font-semibold text-slate-500 mb-2">📸 Gallery</p>
-                              <div className="grid grid-cols-2 gap-2">
-                                {dest.media.map((item) => (
-                                  <div key={item.id} className="rounded-xl overflow-hidden border border-slate-100">
-                                    <img src={item.photoUrl} alt={item.caption || dest.name}
-                                      className="w-full h-24 object-cover" loading="lazy"
-                                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                                    {item.caption && <p className="text-xs text-slate-500 px-2 py-1 truncate">{item.caption}</p>}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Vote button */}
-                    {hasVoted ? (
-                      <div className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 ${
-                        isVotedFor
-                          ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-200'
-                          : 'bg-slate-100 text-slate-400'
-                      }`}>
-                        {isVotedFor ? <><span>✅</span> Your final pick — locked in!</> : <><span>—</span> Not chosen</>}
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setSelected(isSelected ? null : dest.id)}
-                        disabled={submitting}
-                        className={`w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 ${
-                          isSelected
-                            ? 'text-white shadow-lg'
-                            : isOtherSelected
-                            ? 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                            : 'text-white shadow-md hover:opacity-90'
-                        }`}
-                        style={
-                          isSelected
-                            ? { background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 8px 24px rgba(124,58,237,0.4)' }
-                            : !isOtherSelected
-                            ? { background: idx === 0 ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'linear-gradient(135deg, #dc2626, #ea580c)' }
-                            : {}
-                        }
-                      >
-                        {isSelected
-                          ? <><span>🟣</span> Selected — tap to deselect</>
-                          : <><span>👉</span> Pick this one!</>}
-                      </button>
-                    )}
-
-                    {/* R2 vote bar */}
-                    {data.tierTwoResultsPublic && totalT2Votes > 0 && (
-                      <div className="mt-3">
-                        <div className="flex justify-between text-xs text-slate-400 mb-1">
-                          <span>{dest.voteCount} round 2 vote{dest.voteCount !== 1 ? 's' : ''}</span>
-                          <span className="font-bold">{Math.round((dest.voteCount / totalT2Votes) * 100)}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{
-                              width: `${(dest.voteCount / totalT2Votes) * 100}%`,
-                              background: idx === 0 ? 'linear-gradient(90deg, #7c3aed, #a855f7)' : 'linear-gradient(90deg, #dc2626, #f97316)',
-                            }}
-                          />
-                        </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                </div>
-              )
-            })}
 
-            {/* VS badge — between cards */}
-            <div className="order-first md:order-none flex-shrink-0 flex items-center justify-center w-full md:w-auto my-1 md:my-0">
-              <div
-                className="w-16 h-16 md:w-14 md:h-14 rounded-full flex items-center justify-center font-display font-black text-white text-xl shadow-2xl border-2 border-white/20 animate-pulse-slow"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #dc2626)' }}
-              >
-                VS
+                  {/* Vote button */}
+                  {hasVoted ? (
+                    <div className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 ${
+                      isVotedFor
+                        ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-200'
+                        : 'bg-slate-100 text-slate-400'
+                    }`}>
+                      {isVotedFor ? <><span>✅</span> Your final pick — locked in!</> : <><span>—</span> Not chosen</>}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setSelected(isSelected ? null : dest.id)}
+                      disabled={submitting}
+                      className={`w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 shadow-md hover:opacity-90 ${
+                        isOtherSelected && !isSelected ? 'bg-slate-100 text-slate-400 shadow-none' : 'text-white'
+                      }`}
+                      style={isOtherSelected && !isSelected ? {} : {
+                        background: isSelected ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : accentGrad,
+                        boxShadow: isSelected ? '0 8px 24px rgba(124,58,237,0.4)' : undefined,
+                      }}
+                    >
+                      {isSelected ? <><span>🟣</span> Selected — tap to deselect</> : <><span>👉</span> Pick this one!</>}
+                    </button>
+                  )}
+
+                  {/* R2 vote bar */}
+                  {data.tierTwoResultsPublic && totalT2Votes > 0 && (
+                    <div className="mt-3">
+                      <div className="flex justify-between text-xs text-slate-400 mb-1">
+                        <span>{dest.voteCount} vote{dest.voteCount !== 1 ? 's' : ''}</span>
+                        <span className="font-bold">{Math.round((dest.voteCount / totalT2Votes) * 100)}%</span>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-700"
+                          style={{
+                            width: `${(dest.voteCount / totalT2Votes) * 100}%`,
+                            background: idx === 0 ? 'linear-gradient(90deg, #7c3aed, #a855f7)' : 'linear-gradient(90deg, #dc2626, #f97316)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+            )
+          }
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_64px_1fr] items-start">
+              {/* Card A */}
+              <div className="md:pr-3">{renderCard(destinations[0], 0)}</div>
+
+              {/* VS badge — always between cards in DOM order */}
+              <div className="flex items-center justify-center py-6 md:py-0 md:pt-[88px]">
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center font-display font-black text-white text-lg shadow-2xl border-2 border-white/20 animate-pulse-slow"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #dc2626)' }}
+                >
+                  VS
+                </div>
+              </div>
+
+              {/* Card B */}
+              <div className="md:pl-3">{renderCard(destinations[1], 1)}</div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* ── SUBMIT SECTION ── */}
         {!hasVoted && (

@@ -22,8 +22,9 @@ model Destination {
   nights      Int                @default(0)
   order       Int                @default(0)
   createdAt   DateTime           @default(now())
-  votes       Vote[]
-  media       DestinationMedia[]
+  votes        Vote[]
+  tierTwoVotes TierTwoVote[]
+  media        DestinationMedia[]
 }
 
 model DestinationMedia {
@@ -43,6 +44,7 @@ model Participant {
   voteCount    Int       @default(1)
   createdAt    DateTime  @default(now())
   votes          Vote[]
+  tierTwoVotes   TierTwoVote[]
   messages       Message[]
   dateVotes      DateVote[]
   memoryComments MemoryComment[]
@@ -101,6 +103,17 @@ model DateVote {
   dateOption    DateOption  @relation(fields: [dateOptionId], references: [id], onDelete: Cascade)
 
   @@unique([participantId, dateOptionId])
+}
+
+model TierTwoVote {
+  id            String      @id @default(cuid())
+  participantId String
+  destinationId String
+  createdAt     DateTime    @default(now())
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@unique([participantId, destinationId])
 }
 
 model Message {

@@ -22,6 +22,7 @@ export async function GET() {
     votingOpen: settings['votingOpen'] !== 'false',
     announcement: settings['announcement'] || '',
     dateVotingOpen: settings['dateVotingOpen'] === 'true',
+    tierTwoOpen: settings['tierTwoOpen'] === 'true',
   })
 }
 

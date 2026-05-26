@@ -25,28 +25,40 @@ interface AppSettings {
   resultsPublic: boolean
   votingOpen: boolean
   announcement: string
+  tierTwoOpen: boolean
+}
+
+interface TierTwoStats {
+  tierTwoOpen: boolean
+  totalParticipants: number
+  votedCount: number
+  destinations: { id: string; name: string; photoUrl: string; voteCount: number; voters: string[] }[]
 }
 
 export default function AdminDashboard() {
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [participants, setParticipants] = useState<Participant[]>([])
-  const [settings, setSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '' })
+  const [settings, setSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '', tierTwoOpen: false })
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
   const [announcementDraft, setAnnouncementDraft] = useState('')
   const [savingAnnouncement, setSavingAnnouncement] = useState(false)
   const [announcementSaved, setAnnouncementSaved] = useState(false)
+  const [tierTwoStats, setTierTwoStats] = useState<TierTwoStats | null>(null)
+  const [enablingTierTwo, setEnablingTierTwo] = useState(false)
 
   useEffect(() => {
     Promise.all([
       fetch('/api/admin/destinations').then((r) => r.json()),
       fetch('/api/admin/participants').then((r) => r.json()),
       fetch('/api/admin/settings').then((r) => r.json()),
-    ]).then(([dests, parts, s]) => {
+      fetch('/api/admin/tier-two').then((r) => r.json()),
+    ]).then(([dests, parts, s, t2]) => {
       setDestinations(dests)
       setParticipants(parts)
       setSettings(s)
       setAnnouncementDraft(s.announcement || '')
+      setTierTwoStats(t2)
       setLoading(false)
     })
   }, [])
@@ -74,6 +86,39 @@ export default function AdminDashboard() {
     setSavingAnnouncement(false)
     setAnnouncementSaved(true)
     setTimeout(() => setAnnouncementSaved(false), 2000)
+  }
+
+  async function reloadTierTwoStats() {
+    const res = await fetch('/api/admin/tier-two')
+    if (res.ok) setTierTwoStats(await res.json())
+  }
+
+  async function enableTierTwo() {
+    const sorted = [...destinations].sort((a, b) => b.voteCount - a.voteCount)
+    const topCount = sorted[0]?.voteCount || 0
+    const tied = topCount > 0 ? sorted.filter((d) => d.voteCount === topCount).slice(0, 2) : []
+    if (tied.length < 2) return
+    setEnablingTierTwo(true)
+    await fetch('/api/admin/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tierTwoOpen: true, tierTwoDestinationIds: tied.map((d) => d.id).join(',') }),
+    })
+    setSettings((s) => ({ ...s, tierTwoOpen: true }))
+    await reloadTierTwoStats()
+    setEnablingTierTwo(false)
+  }
+
+  async function disableTierTwo() {
+    setEnablingTierTwo(true)
+    await fetch('/api/admin/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tierTwoOpen: false }),
+    })
+    setSettings((s) => ({ ...s, tierTwoOpen: false }))
+    await reloadTierTwoStats()
+    setEnablingTierTwo(false)
   }
 
   const totalVotes = destinations.reduce((s, d) => s + d.voteCount, 0)
@@ -154,6 +199,157 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* ── LEVEL 2 TIEBREAKER ── */}
+      {(() => {
+        const topCount = sortedDestinations[0]?.voteCount || 0
+        const tiedAtTop = topCount > 0 ? sortedDestinations.filter((d) => d.voteCount === topCount) : []
+        const hasTie = tiedAtTop.length >= 2
+        const t2Destinations = tierTwoStats?.destinations || []
+        const t2TotalVotes = t2Destinations.reduce((s, d) => s + d.voteCount, 0)
+
+        return (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <div>
+                <h2 className="text-lg font-display font-bold text-slate-800 flex items-center gap-2">
+                  <span>⚔️</span> Level 2 Tiebreaker
+                </h2>
+                <p className="text-slate-500 text-xs mt-0.5">Activate when two destinations have the same top vote count</p>
+              </div>
+              {settings.tierTwoOpen && (
+                <span className="text-xs bg-violet-100 text-violet-700 font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-500 inline-block animate-pulse" />
+                  Live
+                </span>
+              )}
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Tie detection status */}
+              {!settings.tierTwoOpen ? (
+                hasTie ? (
+                  <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-4">
+                    <span className="text-xl flex-shrink-0">🔥</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-orange-800 text-sm">Tie detected!</p>
+                      <p className="text-orange-600 text-xs mt-0.5">
+                        {tiedAtTop.slice(0, 2).map((d) => d.name).join(' & ')} are tied at {topCount} vote{topCount !== 1 ? 's' : ''} each.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <span className="text-xl flex-shrink-0">✅</span>
+                    <div>
+                      <p className="font-semibold text-slate-700 text-sm">No tie detected</p>
+                      <p className="text-slate-500 text-xs mt-0.5">
+                        {sortedDestinations[0] ? `"${sortedDestinations[0].name}" is leading with ${sortedDestinations[0].voteCount} vote${sortedDestinations[0].voteCount !== 1 ? 's' : ''}.` : 'No votes yet.'}
+                      </p>
+                    </div>
+                  </div>
+                )
+              ) : (
+                /* Active state — show finalists + progress */
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
+                    <span>📊</span>
+                    <span>Round 2 progress: <strong className={tierTwoStats?.votedCount === tierTwoStats?.totalParticipants ? 'text-emerald-600' : 'text-violet-600'}>{tierTwoStats?.votedCount ?? 0}/{tierTwoStats?.totalParticipants ?? 0}</strong> participants voted</span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: tierTwoStats?.totalParticipants
+                          ? `${((tierTwoStats.votedCount / tierTwoStats.totalParticipants) * 100)}%`
+                          : '0%',
+                        background: 'linear-gradient(90deg, #7c3aed, #dc2626)',
+                      }}
+                    />
+                  </div>
+
+                  {/* Finalist vote bars */}
+                  {t2Destinations.map((dest, idx) => (
+                    <div key={dest.id} className="relative flex items-center gap-3 group">
+                      <div className="w-8 text-center text-sm flex-shrink-0 font-bold"
+                        style={{ color: idx === 0 ? '#7c3aed' : '#dc2626' }}>
+                        {idx === 0 ? '🟣' : '🔴'}
+                      </div>
+                      <img
+                        src={dest.photoUrl || `https://picsum.photos/seed/${dest.id}/80/80`}
+                        alt={dest.name}
+                        className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+                        onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${dest.id}/80/80` }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium text-slate-800 text-sm truncate">{dest.name}</span>
+                          <span className="text-sm font-bold ml-2 flex-shrink-0" style={{ color: idx === 0 ? '#7c3aed' : '#dc2626' }}>
+                            {dest.voteCount} vote{dest.voteCount !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                              width: t2TotalVotes > 0 ? `${(dest.voteCount / t2TotalVotes) * 100}%` : '0%',
+                              background: idx === 0 ? 'linear-gradient(90deg, #7c3aed, #a855f7)' : 'linear-gradient(90deg, #dc2626, #f97316)',
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-xs text-slate-400 w-9 text-right flex-shrink-0">
+                        {t2TotalVotes > 0 ? `${Math.round((dest.voteCount / t2TotalVotes) * 100)}%` : '0%'}
+                      </div>
+
+                      {/* Voter tooltip */}
+                      {dest.voters.length > 0 && (
+                        <div className="absolute left-8 top-full mt-1.5 z-20 hidden group-hover:block pointer-events-none">
+                          <div className="bg-slate-800 text-white text-xs rounded-xl px-3 py-2.5 shadow-xl min-w-[140px] max-w-[240px]">
+                            <p className="font-semibold text-white/60 mb-1.5 uppercase tracking-wide text-[10px]">Voted by</p>
+                            <div className="flex flex-wrap gap-1">
+                              {dest.voters.map((name) => (
+                                <span key={name} className="bg-white/15 px-2 py-0.5 rounded-full whitespace-nowrap">{name}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Action button */}
+              <div className="pt-1">
+                {settings.tierTwoOpen ? (
+                  <button
+                    onClick={disableTierTwo}
+                    disabled={enablingTierTwo}
+                    className="flex items-center gap-2 bg-slate-100 hover:bg-red-50 border border-slate-200 hover:border-red-200 text-slate-600 hover:text-red-600 font-semibold text-sm px-4 py-2.5 rounded-xl transition-all disabled:opacity-50"
+                  >
+                    {enablingTierTwo ? '⏳ Closing...' : '🔒 Close Level 2 Voting'}
+                  </button>
+                ) : hasTie ? (
+                  <button
+                    onClick={enableTierTwo}
+                    disabled={enablingTierTwo}
+                    className="flex items-center gap-2 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-lg transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed, #dc2626)' }}
+                  >
+                    {enablingTierTwo ? '⏳ Activating...' : '⚔️ Activate Level 2 Voting'}
+                  </button>
+                ) : (
+                  <p className="text-slate-400 text-xs italic">Level 2 becomes available when two destinations are tied at the top.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── ANNOUNCEMENT ── */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">

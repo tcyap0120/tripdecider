@@ -40,6 +40,7 @@ interface AppSettings {
   resultsPublic: boolean
   votingOpen: boolean
   announcement: string
+  tierTwoOpen: boolean
 }
 
 interface Message {
@@ -55,7 +56,7 @@ export default function VotePage() {
   const router = useRouter()
   const [user, setUser] = useState<UserInfo | null>(null)
   const [destinations, setDestinations] = useState<Destination[]>([])
-  const [appSettings, setAppSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '' })
+  const [appSettings, setAppSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '', tierTwoOpen: false })
   const [loading, setLoading] = useState(true)
   const [pending, setPending] = useState<Set<string>>(new Set())
   const [submitting, setSubmitting] = useState(false)
@@ -285,6 +286,27 @@ export default function VotePage() {
           <div className="mb-5 flex items-start gap-3 bg-white/20 backdrop-blur border border-white/30 rounded-2xl px-4 py-3.5 text-white shadow-lg animate-fade-in">
             <span className="text-xl flex-shrink-0 mt-0.5">📢</span>
             <p className="text-sm sm:text-base leading-relaxed font-medium">{appSettings.announcement}</p>
+          </div>
+        )}
+
+        {/* Level 2 tiebreaker banner */}
+        {appSettings.tierTwoOpen && (
+          <div className="mb-5 animate-fade-in">
+            <a
+              href="/tier-two"
+              className="flex items-center gap-3 px-4 py-4 rounded-2xl text-white shadow-xl transition-all hover:scale-[1.01] hover:shadow-2xl active:scale-[0.99]"
+              style={{ background: 'linear-gradient(135deg, #302b63, #7c3aed, #dc2626)' }}
+            >
+              <span className="text-2xl flex-shrink-0 animate-float">⚔️</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-display font-bold text-sm sm:text-base leading-tight">Round 2 Tiebreaker is LIVE!</p>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 border border-white/30 whitespace-nowrap">NEW</span>
+                </div>
+                <p className="text-white/70 text-xs mt-0.5">Two destinations tied — cast your final vote now →</p>
+              </div>
+              <span className="text-white/60 text-lg flex-shrink-0">›</span>
+            </a>
           </div>
         )}
 

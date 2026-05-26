@@ -197,7 +197,7 @@ export default function TierTwoPage() {
 
             return (
               <div
-                className={`destination-card animate-fade-in transition-all duration-300 ${
+                className={`destination-card animate-fade-in transition-all duration-300 flex flex-col h-full ${
                   hasVoted && !isVotedFor ? 'opacity-55 saturate-50' : ''
                 }`}
                 style={{
@@ -245,7 +245,7 @@ export default function TierTwoPage() {
                 </div>
 
                 {/* Content */}
-                <div className="p-4">
+                <div className="p-4 flex-1 flex flex-col">
                   {/* Price */}
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-1.5">
@@ -326,6 +326,7 @@ export default function TierTwoPage() {
                   </div>
 
                   {/* Vote button */}
+                  <div className="mt-auto pt-1">
                   {hasVoted ? (
                     <div className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 ${
                       isVotedFor
@@ -367,15 +368,16 @@ export default function TierTwoPage() {
                       </div>
                     </div>
                   )}
+                  </div>
                 </div>
               </div>
             )
           }
 
           return (
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_64px_1fr] items-start">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_64px_1fr] items-stretch">
               {/* Card A */}
-              <div className="md:pr-3">{renderCard(destinations[0], 0)}</div>
+              <div className="md:pr-3 flex flex-col">{renderCard(destinations[0], 0)}</div>
 
               {/* VS badge — always between cards in DOM order */}
               <div className="flex items-center justify-center py-6 md:py-0 md:pt-[88px]">
@@ -388,7 +390,7 @@ export default function TierTwoPage() {
               </div>
 
               {/* Card B */}
-              <div className="md:pl-3">{renderCard(destinations[1], 1)}</div>
+              <div className="md:pl-3 flex flex-col">{renderCard(destinations[1], 1)}</div>
             </div>
           )
         })()}

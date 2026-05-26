@@ -20,10 +20,10 @@ export async function GET() {
 
   const tierTwoOpen = s['tierTwoOpen'] === 'true'
   const destinationIds = (s['tierTwoDestinationIds'] || '').split(',').filter(Boolean)
-  const resultsPublic = s['resultsPublic'] === 'true'
+  const tierTwoResultsPublic = s['tierTwoResultsPublic'] === 'true'
 
   if (!tierTwoOpen || destinationIds.length < 2) {
-    return NextResponse.json({ tierTwoOpen: false, resultsPublic, destinations: [], myVote: null })
+    return NextResponse.json({ tierTwoOpen: false, tierTwoResultsPublic, destinations: [], myVote: null })
   }
 
   const destinations = await prisma.destination.findMany({
@@ -33,7 +33,7 @@ export async function GET() {
 
   return NextResponse.json({
     tierTwoOpen,
-    resultsPublic,
+    tierTwoResultsPublic,
     destinations: destinations.map((d) => ({
       id: d.id,
       name: d.name,

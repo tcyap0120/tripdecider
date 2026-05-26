@@ -28,7 +28,7 @@ interface Destination {
 
 interface TierTwoData {
   tierTwoOpen: boolean
-  resultsPublic: boolean
+  tierTwoResultsPublic: boolean
   destinations: Destination[]
   myVote: string | null
 }
@@ -178,7 +178,7 @@ export default function TierTwoPage() {
             </div>
           )}
 
-          {data.resultsPublic && totalT2Votes > 0 && (
+          {data.tierTwoResultsPublic && totalT2Votes > 0 && (
             <p className="text-purple-400 text-xs mt-3">
               {totalT2Votes} round 2 vote{totalT2Votes !== 1 ? 's' : ''} cast
             </p>
@@ -236,7 +236,7 @@ export default function TierTwoPage() {
                     )}
 
                     {/* R2 vote count */}
-                    {data.resultsPublic && totalT2Votes > 0 && (
+                    {data.tierTwoResultsPublic && totalT2Votes > 0 && (
                       <div className="absolute top-3 right-3" style={{ display: isVotedFor || (isSelected && !hasVoted) ? 'none' : 'block' }}>
                         <div className="bg-black/50 backdrop-blur text-white text-xs font-bold px-2.5 py-1 rounded-full">
                           🗳️ {dest.voteCount}
@@ -375,7 +375,7 @@ export default function TierTwoPage() {
                     )}
 
                     {/* R2 vote bar */}
-                    {data.resultsPublic && totalT2Votes > 0 && (
+                    {data.tierTwoResultsPublic && totalT2Votes > 0 && (
                       <div className="mt-3">
                         <div className="flex justify-between text-xs text-slate-400 mb-1">
                           <span>{dest.voteCount} round 2 vote{dest.voteCount !== 1 ? 's' : ''}</span>

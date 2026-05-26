@@ -26,6 +26,7 @@ interface AppSettings {
   votingOpen: boolean
   announcement: string
   tierTwoOpen: boolean
+  tierTwoResultsPublic: boolean
 }
 
 interface TierTwoStats {
@@ -38,7 +39,7 @@ interface TierTwoStats {
 export default function AdminDashboard() {
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [participants, setParticipants] = useState<Participant[]>([])
-  const [settings, setSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '', tierTwoOpen: false })
+  const [settings, setSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '', tierTwoOpen: false, tierTwoResultsPublic: false })
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
   const [announcementDraft, setAnnouncementDraft] = useState('')
@@ -62,7 +63,7 @@ export default function AdminDashboard() {
       .catch(() => setLoading(false))
   }, [])
 
-  async function toggleSetting(key: 'resultsPublic' | 'votingOpen') {
+  async function toggleSetting(key: 'resultsPublic' | 'votingOpen' | 'tierTwoResultsPublic') {
     setToggling(key)
     const newVal = !settings[key]
     const res = await fetch('/api/admin/settings', {
@@ -323,6 +324,34 @@ export default function AdminDashboard() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Round 2 results visibility toggle */}
+              {settings.tierTwoOpen && (
+                <div className={`flex items-start justify-between gap-4 p-4 rounded-xl border-2 transition-colors ${
+                  settings.tierTwoResultsPublic ? 'bg-violet-50 border-violet-200' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <div>
+                    <div className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                      <span>{settings.tierTwoResultsPublic ? '👁️' : '🙈'}</span>
+                      Round 2 Results Visibility
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {settings.tierTwoResultsPublic
+                        ? 'Participants can see Round 2 vote counts'
+                        : 'Round 2 vote counts hidden from participants'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => toggleSetting('tierTwoResultsPublic')}
+                    disabled={toggling === 'tierTwoResultsPublic'}
+                    className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      settings.tierTwoResultsPublic ? 'bg-violet-500' : 'bg-slate-300'
+                    } ${toggling === 'tierTwoResultsPublic' ? 'opacity-50' : ''}`}
+                  >
+                    <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-200 ${settings.tierTwoResultsPublic ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
                 </div>
               )}
 

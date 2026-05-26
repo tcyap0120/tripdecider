@@ -79,6 +79,7 @@ export async function GET() {
       announcement: s['announcement'] || '',
       dateVotingOpen: s['dateVotingOpen'] === 'true',
       tierTwoOpen,
+      tierTwoResultsPublic: s['tierTwoResultsPublic'] === 'true',
     },
     tierTwo: {
       tierTwoOpen,

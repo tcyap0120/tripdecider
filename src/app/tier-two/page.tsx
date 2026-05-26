@@ -41,7 +41,7 @@ export default function TierTwoPage() {
   const [selected, setSelected] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [justSubmitted, setJustSubmitted] = useState(false)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
   const load = useCallback(async () => {
     const [meRes, tierRes] = await Promise.all([
@@ -287,12 +287,16 @@ export default function TierTwoPage() {
                   {/* Expandable details */}
                   <div className="mb-3">
                     <button
-                      onClick={() => setExpandedId(expandedId === dest.id ? null : dest.id)}
+                      onClick={() => setExpandedIds(prev => {
+                        const next = new Set(prev)
+                        next.has(dest.id) ? next.delete(dest.id) : next.add(dest.id)
+                        return next
+                      })}
                       className="text-violet-500 text-xs font-medium hover:text-violet-700 transition-colors flex items-center gap-1"
                     >
-                      {expandedId === dest.id ? '▲ Less' : <>▼ More info{dest.media.length > 0 ? ` · 📸 ${dest.media.length}` : ''}</>}
+                      {expandedIds.has(dest.id) ? '▲ Less' : <>▼ More info{dest.media.length > 0 ? ` · 📸 ${dest.media.length}` : ''}</>}
                     </button>
-                    {expandedId === dest.id && (
+                    {expandedIds.has(dest.id) && (
                       <div className="mt-2 animate-fade-in space-y-3">
                         {dest.link && (
                           <a

@@ -190,7 +190,8 @@ export default function VotePage() {
   const showResults = appSettings.resultsPublic
   const votingOpen = appSettings.votingOpen
   const hasSubmitted = (user?.votesUsed ?? 0) > 0 && (user?.votesUsed ?? 0) >= (user?.voteCount ?? 1)
-  const isLocked = votingOpen && hasSubmitted && !editMode
+  const tierTwoLive = appSettings.tierTwoOpen
+  const isLocked = (votingOpen && hasSubmitted && !editMode) || tierTwoLive
 
   function formatTime(ts: string) {
     const d = new Date(ts)
@@ -316,14 +317,18 @@ export default function VotePage() {
             <span className="text-xl flex-shrink-0">✅</span>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm sm:text-base leading-tight">Your votes are submitted!</p>
-              <p className="text-white/60 text-xs mt-0.5">Changed your mind? You can still update your choices.</p>
+              <p className="text-white/60 text-xs mt-0.5">
+                {tierTwoLive ? 'Round 2 is live — Round 1 votes are now locked. 🔒' : 'Changed your mind? You can still update your choices.'}
+              </p>
             </div>
-            <button
-              onClick={() => setEditMode(true)}
-              className="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-all active:scale-95 whitespace-nowrap"
-            >
-              ✏️ Edit votes
-            </button>
+            {!tierTwoLive && (
+              <button
+                onClick={() => setEditMode(true)}
+                className="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-all active:scale-95 whitespace-nowrap"
+              >
+                ✏️ Edit votes
+              </button>
+            )}
           </div>
         )}
 

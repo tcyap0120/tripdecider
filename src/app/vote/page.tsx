@@ -266,7 +266,7 @@ export default function VotePage() {
         <div className="max-w-6xl mx-auto px-3 sm:px-4 pb-2">
           <div className="text-xs text-cyan-200 mb-1">
             {isLocked
-              ? `✅ You've submitted ${user?.voteCount} vote${(user?.voteCount ?? 1) !== 1 ? 's' : ''} · scroll down to edit`
+              ? `✅ Your votes are locked in`
               : pending.size === (user?.voteCount ?? 0)
               ? `✅ All ${user?.voteCount} selected — hit Submit to confirm!`
               : `Select ${(user?.voteCount ?? 0) - pending.size} more destination${(user?.voteCount ?? 0) - pending.size !== 1 ? 's' : ''} to continue`}
@@ -295,7 +295,7 @@ export default function VotePage() {
           <div className="mb-5 animate-fade-in">
             <a
               href="/tier-two"
-              className="flex items-center gap-3 px-4 py-4 rounded-2xl text-white shadow-xl transition-all hover:scale-[1.01] hover:shadow-2xl active:scale-[0.99]"
+              className="flex items-center gap-3 px-4 py-6 rounded-2xl text-white shadow-xl transition-all hover:scale-[1.01] hover:shadow-2xl active:scale-[0.99]"
               style={{ background: 'linear-gradient(135deg, #302b63, #7c3aed, #dc2626)' }}
             >
               <span className="text-2xl flex-shrink-0 animate-float">⚔️</span>
@@ -340,12 +340,17 @@ export default function VotePage() {
           <p className="text-cyan-100 text-sm sm:text-base">
             {destinations.length} destination{destinations.length !== 1 ? 's' : ''} · {showResults ? `${totalVotes} votes cast` : 'Vote counting in progress...'}
           </p>
-          {showResults && topDest && totalVotes > 0 && (
-            <div className="inline-flex items-center gap-2 mt-2 sm:mt-3 bg-white/15 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white text-xs sm:text-sm">
-              <span>🏆</span>
-              <span>Leading: <strong>{topDest.name}</strong> — {topDest.voteCount} vote{topDest.voteCount !== 1 ? 's' : ''}</span>
-            </div>
-          )}
+          {showResults && topDest && totalVotes > 0 && (() => {
+            const leaders = sortedByVotes.filter((d) => d.voteCount === topDest.voteCount)
+            return (
+              <div className="inline-flex items-center gap-2 mt-2 sm:mt-3 bg-white/15 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white text-xs sm:text-sm">
+                <span>🏆</span>
+                <span>
+                  Leading: <strong>{leaders.map((d) => d.name).join(' & ')}</strong> — {topDest.voteCount} vote{topDest.voteCount !== 1 ? 's' : ''}{leaders.length > 1 ? ' each' : ''}
+                </span>
+              </div>
+            )
+          })()}
         </div>
 
         {/* Voting closed banner */}
@@ -360,7 +365,7 @@ export default function VotePage() {
         {showResults && (
           <div className="bg-amber-400/20 backdrop-blur border border-amber-300/40 rounded-2xl px-4 py-3 text-center mb-5 flex items-center justify-center gap-2 text-white font-semibold text-sm sm:text-base">
             <span>🏆</span> Results are now live!{' '}
-            <a href="/results" className="underline hover:text-amber-200 ml-1">See full results →</a>
+            <a href="/results" className="underline hover:text-amber-200 ml-1">See Round 1 Full Results →</a>
           </div>
         )}
 

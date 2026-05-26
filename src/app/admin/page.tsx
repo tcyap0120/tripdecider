@@ -48,19 +48,16 @@ export default function AdminDashboard() {
   const [enablingTierTwo, setEnablingTierTwo] = useState(false)
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/admin/destinations').then((r) => r.json()),
-      fetch('/api/admin/participants').then((r) => r.json()),
-      fetch('/api/admin/settings').then((r) => r.json()),
-      fetch('/api/admin/tier-two').then((r) => r.json()),
-    ]).then(([dests, parts, s, t2]) => {
-      setDestinations(dests)
-      setParticipants(parts)
-      setSettings(s)
-      setAnnouncementDraft(s.announcement || '')
-      setTierTwoStats(t2)
-      setLoading(false)
-    })
+    fetch('/api/admin/dashboard')
+      .then((r) => r.json())
+      .then(({ destinations: dests, participants: parts, settings: s, tierTwo: t2 }) => {
+        setDestinations(dests)
+        setParticipants(parts)
+        setSettings(s)
+        setAnnouncementDraft(s.announcement || '')
+        setTierTwoStats(t2)
+        setLoading(false)
+      })
   }, [])
 
   async function toggleSetting(key: 'resultsPublic' | 'votingOpen') {
@@ -89,8 +86,12 @@ export default function AdminDashboard() {
   }
 
   async function reloadTierTwoStats() {
-    const res = await fetch('/api/admin/tier-two')
-    if (res.ok) setTierTwoStats(await res.json())
+    const res = await fetch('/api/admin/dashboard')
+    if (res.ok) {
+      const { tierTwo: t2, settings: s } = await res.json()
+      setTierTwoStats(t2)
+      setSettings((prev) => ({ ...prev, tierTwoOpen: s.tierTwoOpen }))
+    }
   }
 
   async function enableTierTwo() {

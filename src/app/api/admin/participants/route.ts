@@ -1,43 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getIronSession } from 'iron-session'
-import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { sessionOptions, SessionData } from '@/lib/session'
+import { getAdminTrip } from '@/lib/trip'
 
-async function requireAdmin() {
-  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-  if (!session.isLoggedIn || !session.isAdmin) return null
-  return session
-}
-
+// All participant accounts, with their membership in the trip being managed
 export async function GET() {
-  if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const ctx = await getAdminTrip()
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const tripId = ctx.trip.id
 
   const participants = await prisma.participant.findMany({
     orderBy: { createdAt: 'asc' },
     include: {
-      _count: { select: { votes: true } },
-      votes: { select: { destinationId: true } },
+      trips: { where: { tripId }, select: { voteCount: true } },
+      votes: { where: { destination: { tripId } }, select: { destinationId: true } },
     },
   })
 
   return NextResponse.json(
-    participants.map((p) => ({
-      id: p.id,
-      username: p.username,
-      displayName: p.displayName || '',
-      voteCount: p.voteCount,
-      votesUsed: p._count.votes,
-      remainingVotes: p.voteCount - p._count.votes,
-      createdAt: p.createdAt,
-      votedFor: p.votes.map((v) => v.destinationId),
-    }))
+    participants.map((p) => {
+      const membership = p.trips[0]
+      const voteCount = membership?.voteCount ?? p.voteCount
+      return {
+        id: p.id,
+        username: p.username,
+        displayName: p.displayName || '',
+        inTrip: !!membership,
+        voteCount,
+        votesUsed: p.votes.length,
+        remainingVotes: voteCount - p.votes.length,
+        createdAt: p.createdAt,
+        votedFor: p.votes.map((v) => v.destinationId),
+      }
+    })
   )
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const ctx = await getAdminTrip()
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { username, password, displayName, voteCount } = await req.json()
 
@@ -51,12 +52,15 @@ export async function POST(req: NextRequest) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
+  const votes = voteCount ?? 1
+  // New participants are ticked into the trip currently being managed
   const participant = await prisma.participant.create({
     data: {
       username,
       displayName: displayName || '',
       passwordHash,
-      voteCount: voteCount ?? 1,
+      voteCount: votes,
+      trips: { create: { tripId: ctx.trip.id, voteCount: votes } },
     },
   })
 

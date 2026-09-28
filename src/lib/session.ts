@@ -5,6 +5,8 @@ export interface SessionData {
   username?: string
   displayName?: string
   isAdmin?: boolean
+  tripId?: string      // participant's selected trip
+  adminTripId?: string // trip the admin is currently managing
   isLoggedIn: boolean
 }
 

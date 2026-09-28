@@ -50,6 +50,7 @@ export default function TierTwoPage() {
     ])
     const me = await meRes.json()
     if (!me.isLoggedIn) { router.replace('/login'); return }
+    if (!me.trip) { router.replace('/trips'); return }
     setUser(me)
     if (tierRes.ok) {
       const d: TierTwoData = await tierRes.json()

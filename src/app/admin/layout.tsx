@@ -3,10 +3,18 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 
+interface TripSummary {
+  id: string
+  name: string
+  status: 'active' | 'past'
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const [checking, setChecking] = useState(true)
+  const [trips, setTrips] = useState<TripSummary[]>([])
+  const [currentTripId, setCurrentTripId] = useState('')
 
   useEffect(() => {
     if (pathname === '/admin/login') { setChecking(false); return }
@@ -15,6 +23,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       else setChecking(false)
     })
   }, [router, pathname])
+
+  // Refetch on navigation so the switcher reflects trips created/renamed on the Trips page
+  useEffect(() => {
+    if (pathname === '/admin/login' || checking) return
+    fetch('/api/admin/trips').then((r) => r.ok ? r.json() : null).then((d) => {
+      if (!d) return
+      setTrips(d.trips)
+      setCurrentTripId(d.currentTripId)
+    })
+  }, [pathname, checking])
+
+  async function switchTrip(tripId: string) {
+    setCurrentTripId(tripId)
+    await fetch('/api/admin/trips/current', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tripId }),
+    })
+    // Every admin page loads data for the current trip, so reload to refetch
+    window.location.reload()
+  }
 
   if (pathname === '/admin/login') return <>{children}</>
   if (checking) return (
@@ -32,6 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navItems = [
+    { href: '/admin/trips', label: 'Trips', icon: '🧳' },
     { href: '/admin', label: 'Dashboard', icon: '📊' },
     { href: '/admin/destinations', label: 'Destinations', icon: '🗺️' },
     { href: '/admin/participants', label: 'Participants', icon: '👥' },
@@ -56,7 +86,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <p className="text-white/60 text-xs font-medium tracking-widest uppercase">Admin Panel</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {trips.length > 0 && (
+              <label className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-xl pl-2.5 pr-1 py-1 min-w-0">
+                <span className="text-xs text-white/60 hidden sm:inline whitespace-nowrap">Managing</span>
+                <select
+                  value={currentTripId}
+                  onChange={(e) => switchTrip(e.target.value)}
+                  className="bg-transparent text-sm font-semibold text-white outline-none cursor-pointer max-w-[9rem] sm:max-w-[16rem] truncate"
+                >
+                  {trips.map((t) => (
+                    <option key={t.id} value={t.id} className="text-slate-800">
+                      {t.status === 'past' ? '📜 ' : '🟢 '}{t.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <button onClick={handleLogout}
               className="flex items-center gap-1.5 text-sm font-medium bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 rounded-xl transition-all">
               Logout

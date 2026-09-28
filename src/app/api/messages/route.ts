@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getIronSession } from 'iron-session'
-import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { sessionOptions, SessionData } from '@/lib/session'
+import { getAdminTrip, getParticipantTrip } from '@/lib/trip'
 
 export async function GET() {
-  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-  if (!session.isLoggedIn) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Used by participant pages and the admin discussion page
+  const ctx = (await getParticipantTrip()) ?? (await getAdminTrip())
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const messages = await prisma.message.findMany({
+    where: { tripId: ctx.trip.id },
     orderBy: { createdAt: 'asc' },
     take: 200,
     select: {
@@ -25,9 +25,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-  if (!session.isLoggedIn || !session.userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const ctx = await getParticipantTrip()
+  if (!ctx) {
+    return NextResponse.json({ error: 'Only participants can send messages' }, { status: 403 })
   }
 
   const { content, destinationId } = await req.json()
@@ -38,18 +38,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Message too long (max 500 chars)' }, { status: 400 })
   }
 
-  const participantId = session.isAdmin ? null : session.userId
-
-  if (!participantId) {
-    return NextResponse.json({ error: 'Only participants can send messages' }, { status: 403 })
-  }
-
-  const participant = await prisma.participant.findUnique({ where: { id: participantId }, select: { displayName: true, username: true } })
-  const authorName = participant?.displayName || participant?.username || session.username!
+  const participant = await prisma.participant.findUnique({ where: { id: ctx.participantId }, select: { displayName: true, username: true } })
+  const authorName = participant?.displayName || participant?.username || ctx.session.username!
 
   const message = await prisma.message.create({
     data: {
-      participantId,
+      tripId: ctx.trip.id,
+      participantId: ctx.participantId,
       username: authorName,
       content: content.trim(),
       destinationId: destinationId || null,
@@ -60,8 +55,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-  if (!session.isLoggedIn || !session.isAdmin) {
+  const ctx = await getAdminTrip()
+  if (!ctx) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

@@ -7,24 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Trip {
+  id           String            @id @default(cuid())
+  name         String
+  description  String            @default("")
+  status       String            @default("active") // active | past
+  createdAt    DateTime          @default(now())
+  participants TripParticipant[]
+  destinations Destination[]
+  dateOptions  DateOption[]
+  memories     Memory[]
+  messages     Message[]
+}
+
+model TripParticipant {
+  id            String      @id @default(cuid())
+  tripId        String
+  participantId String
+  voteCount     Int         @default(1)
+  createdAt     DateTime    @default(now())
+  trip          Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, participantId])
+}
+
 model Destination {
-  id          String             @id @default(cuid())
-  name        String
-  description String
-  accommodationPrice Float      @default(0)
-  otherPrice         Float      @default(0)
-  currency           String     @default("MYR")
-  photoUrl    String
-  link        String?
-  details     String
-  tags        String             @default("")
-  days        Int                @default(0)
-  nights      Int                @default(0)
-  order       Int                @default(0)
-  createdAt   DateTime           @default(now())
-  votes        Vote[]
-  tierTwoVotes TierTwoVote[]
-  media        DestinationMedia[]
+  id                 String             @id @default(cuid())
+  tripId             String?
+  trip               Trip?              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name               String
+  description        String
+  accommodationPrice Float              @default(0)
+  otherPrice         Float              @default(0)
+  currency           String             @default("MYR")
+  photoUrl           String
+  link               String?
+  details            String
+  tags               String             @default("")
+  days               Int                @default(0)
+  nights             Int                @default(0)
+  order              Int                @default(0)
+  createdAt          DateTime           @default(now())
+  votes              Vote[]
+  tierTwoVotes       TierTwoVote[]
+  media              DestinationMedia[]
 }
 
 model DestinationMedia {
@@ -37,17 +64,18 @@ model DestinationMedia {
 }
 
 model Participant {
-  id           String    @id @default(cuid())
-  username     String    @unique
-  displayName  String    @default("")
-  passwordHash String
-  voteCount    Int       @default(1)
-  createdAt    DateTime  @default(now())
+  id             String            @id @default(cuid())
+  username       String            @unique
+  displayName    String            @default("")
+  passwordHash   String
+  voteCount      Int               @default(1)
+  createdAt      DateTime          @default(now())
   votes          Vote[]
   tierTwoVotes   TierTwoVote[]
   messages       Message[]
   dateVotes      DateVote[]
   memoryComments MemoryComment[]
+  trips          TripParticipant[]
 }
 
 model Vote {
@@ -68,6 +96,8 @@ model Settings {
 
 model DateOption {
   id        String     @id @default(cuid())
+  tripId    String?
+  trip      Trip?      @relation(fields: [tripId], references: [id], onDelete: Cascade)
   date      String
   label     String     @default("")
   order     Int        @default(0)
@@ -77,6 +107,8 @@ model DateOption {
 
 model Memory {
   id        String          @id @default(cuid())
+  tripId    String?
+  trip      Trip?           @relation(fields: [tripId], references: [id], onDelete: Cascade)
   photoUrl  String
   caption   String          @default("")
   createdAt DateTime        @default(now())
@@ -118,6 +150,8 @@ model TierTwoVote {
 
 model Message {
   id            String      @id @default(cuid())
+  tripId        String?
+  trip          Trip?       @relation(fields: [tripId], references: [id], onDelete: Cascade)
   participantId String
   username      String
   content       String

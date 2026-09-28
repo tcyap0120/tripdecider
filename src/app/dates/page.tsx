@@ -44,6 +44,7 @@ export default function DatesPage() {
     ])
     const me = await meRes.json()
     if (!me.isLoggedIn) { router.replace('/login'); return }
+    if (!me.trip) { router.replace('/trips'); return }
     setUser(me)
 
     const s = await settingsRes.json()

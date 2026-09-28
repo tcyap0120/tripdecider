@@ -34,6 +34,7 @@ interface UserInfo {
   voteCount?: number
   votesUsed?: number
   remainingVotes?: number
+  trip?: { id: string; name: string; status: 'active' | 'past' } | null
 }
 
 interface AppSettings {
@@ -86,6 +87,7 @@ export default function VotePage() {
     ])
     const meData = await meRes.json()
     if (!meData.isLoggedIn) { router.replace('/login'); return }
+    if (!meData.trip) { router.replace('/trips'); return }
     setUser(meData)
     if (destRes.ok) {
       const dests = await destRes.json()
@@ -228,7 +230,7 @@ export default function VotePage() {
             <div className="w-9 h-9 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-lg shadow-inner border border-white/20 flex-shrink-0">🏝️</div>
             <div className="min-w-0">
               <h1 className="font-display font-extrabold text-white text-base leading-none tracking-tight">Trip<span className="text-cyan-300">Decider</span></h1>
-              <p className="text-white/55 text-xs truncate mt-0.5">Hi, {user?.displayName || user?.username}! 👋</p>
+              <p className="text-white/55 text-xs truncate mt-0.5">Hi, {user?.displayName || user?.username}! 👋 · <span className="text-cyan-200 font-semibold">{user?.trip?.name}</span></p>
             </div>
           </div>
 
@@ -239,6 +241,9 @@ export default function VotePage() {
                 <span>🏆</span><span className="hidden sm:inline">Results</span>
               </a>
             )}
+            <a href="/trips" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
+              <span>🧳</span><span className="hidden sm:inline">Trips</span>
+            </a>
             <a href="/dates" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
               <span>📅</span><span className="hidden sm:inline">Dates</span>
             </a>
@@ -291,7 +296,7 @@ export default function VotePage() {
         )}
 
         {/* Level 2 tiebreaker banner */}
-        {appSettings.tierTwoOpen && (
+        {appSettings.tierTwoOpen && user?.trip?.status !== 'past' && (
           <div className="mb-5 animate-fade-in">
             <a
               href="/tier-two"
@@ -356,7 +361,8 @@ export default function VotePage() {
         {/* Voting closed banner */}
         {!votingOpen && (
           <div className="glass-card px-4 py-3 text-center mb-5 flex items-center justify-center gap-2 text-slate-700 font-semibold text-sm sm:text-base">
-            <span>🔒</span> Voting is now closed.{' '}
+            <span>{user?.trip?.status === 'past' ? '📜' : '🔒'}</span>
+            {user?.trip?.status === 'past' ? 'This is a past trip — voting has ended.' : 'Voting is now closed.'}{' '}
             {showResults ? <a href="/results" className="text-sky-600 hover:underline ml-1">View results →</a> : ' Results coming soon!'}
           </div>
         )}

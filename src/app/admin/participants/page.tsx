@@ -5,6 +5,7 @@ interface Participant {
   id: string
   username: string
   displayName: string
+  inTrip: boolean
   voteCount: number
   votesUsed: number
   remainingVotes: number
@@ -22,12 +23,32 @@ export default function ParticipantsPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [trip, setTrip] = useState<{ id: string; name: string } | null>(null)
+  const [togglingTrip, setTogglingTrip] = useState<string | null>(null)
   const mouseDownTarget = useRef<EventTarget | null>(null)
 
   async function load() {
-    const res = await fetch('/api/admin/participants')
+    const [res, tripsRes] = await Promise.all([fetch('/api/admin/participants'), fetch('/api/admin/trips')])
     setParticipants(await res.json())
+    if (tripsRes.ok) {
+      const d = await tripsRes.json()
+      const current = d.trips.find((t: { id: string }) => t.id === d.currentTripId)
+      setTrip(current ? { id: current.id, name: current.name } : null)
+    }
     setLoading(false)
+  }
+
+  async function toggleInTrip(p: Participant) {
+    if (!trip) return
+    setTogglingTrip(p.id)
+    const ids = participants.filter((x) => (x.id === p.id ? !x.inTrip : x.inTrip)).map((x) => x.id)
+    await fetch(`/api/admin/trips/${trip.id}/participants`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantIds: ids }),
+    })
+    await load()
+    setTogglingTrip(null)
   }
 
   useEffect(() => { load() }, [])
@@ -103,7 +124,10 @@ export default function ParticipantsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-display font-bold text-slate-800">👥 Participants</h2>
-          <p className="text-slate-500 text-sm mt-0.5">{participants.length} participant{participants.length !== 1 ? 's' : ''} registered</p>
+          <p className="text-slate-500 text-sm mt-0.5">
+            {participants.length} participant{participants.length !== 1 ? 's' : ''} registered
+            {trip && <> · <strong className="text-slate-700">{participants.filter((p) => p.inTrip).length}</strong> on <strong className="text-slate-700">{trip.name}</strong></>}
+          </p>
         </div>
         <button onClick={openAdd} className="btn-primary">
           <span>+</span> Add Participant
@@ -123,6 +147,7 @@ export default function ParticipantsPage() {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-100">
                 <tr className="text-left text-slate-600">
+                  <th className="px-5 py-3 font-semibold text-center" title="Only ticked participants can view and vote on this trip">This trip</th>
                   <th className="px-5 py-3 font-semibold">Participant</th>
                   <th className="px-5 py-3 font-semibold text-center">Votes Allocated</th>
                   <th className="px-5 py-3 font-semibold text-center">Used</th>
@@ -133,7 +158,17 @@ export default function ParticipantsPage() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {participants.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={p.id} className={`hover:bg-slate-50 transition-colors ${p.inTrip ? '' : 'opacity-50'}`}>
+                    <td className="px-5 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={p.inTrip}
+                        disabled={togglingTrip !== null}
+                        onChange={() => toggleInTrip(p)}
+                        className="w-4 h-4 accent-sky-500 cursor-pointer"
+                        aria-label={`Include ${p.displayName || p.username} in this trip`}
+                      />
+                    </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-cyan-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
@@ -159,7 +194,11 @@ export default function ParticipantsPage() {
                       </span>
                     </td>
                     <td className="px-5 py-4 text-center">
-                      {p.remainingVotes === 0 ? (
+                      {!p.inTrip ? (
+                        <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-400 text-xs font-medium px-2.5 py-1 rounded-full">
+                          Not on trip
+                        </span>
+                      ) : p.remainingVotes === 0 ? (
                         <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-medium px-2.5 py-1 rounded-full">
                           ✅ Voted
                         </span>
@@ -269,7 +308,7 @@ export default function ParticipantsPage() {
                   onWheel={(e) => e.currentTarget.blur()}
                   required
                 />
-                <p className="text-xs text-slate-400 mt-1">How many destinations this participant can vote for</p>
+                <p className="text-xs text-slate-400 mt-1">How many destinations this participant can vote for{trip ? ` in ${trip.name}` : ''}</p>
               </div>
 
               {error && (

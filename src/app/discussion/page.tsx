@@ -80,6 +80,7 @@ export default function DiscussionPage() {
     ])
     const me = await meRes.json()
     if (!me.isLoggedIn) { router.replace('/login'); return }
+    if (!me.trip) { router.replace('/trips'); return }
     setUser(me)
     if (msgRes.ok) setMessages(await msgRes.json())
     if (destRes.ok) {

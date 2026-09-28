@@ -1,25 +1,25 @@
 import { NextResponse } from 'next/server'
-import { getIronSession } from 'iron-session'
-import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { sessionOptions, SessionData } from '@/lib/session'
+import { getAdminTrip, getParticipantTrip } from '@/lib/trip'
 
 export async function GET() {
-  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-
-  if (!session.isLoggedIn) {
+  // Used by participant pages and the admin discussion page
+  const participantCtx = await getParticipantTrip()
+  const ctx = participantCtx ?? (await getAdminTrip())
+  if (!ctx) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const destinations = await prisma.destination.findMany({
+    where: { tripId: ctx.trip.id },
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
     include: { _count: { select: { votes: true } }, media: { orderBy: { createdAt: 'asc' } } },
   })
 
   let votedIds: string[] = []
-  if (!session.isAdmin && session.userId) {
+  if (participantCtx) {
     const votes = await prisma.vote.findMany({
-      where: { participantId: session.userId },
+      where: { participantId: participantCtx.participantId, destination: { tripId: ctx.trip.id } },
       select: { destinationId: true },
     })
     votedIds = votes.map((v) => v.destinationId)

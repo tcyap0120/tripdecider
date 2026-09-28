@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getIronSession } from 'iron-session'
-import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { sessionOptions, SessionData } from '@/lib/session'
-
-async function requireAdmin() {
-  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-  if (!session.isLoggedIn || !session.isAdmin) return null
-  return session
-}
+import { getAdminTrip } from '@/lib/trip'
 
 export async function GET() {
-  if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const ctx = await getAdminTrip()
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const destinations = await prisma.destination.findMany({
+    where: { tripId: ctx.trip.id },
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
     include: {
       _count: { select: { votes: true } },
@@ -33,7 +27,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const ctx = await getAdminTrip()
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
   const { name, description, accommodationPrice, otherPrice, currency, photoUrl, link, details, tags, days, nights } = body
@@ -44,6 +39,7 @@ export async function POST(req: NextRequest) {
 
   const destination = await prisma.destination.create({
     data: {
+      tripId: ctx.trip.id,
       name,
       description: description || '',
       accommodationPrice: parseFloat(accommodationPrice) || 0,

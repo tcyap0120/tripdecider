@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server'
-import { getIronSession } from 'iron-session'
-import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { sessionOptions, SessionData } from '@/lib/session'
+import { getAdminTrip, getTripSettings } from '@/lib/trip'
 
 export async function GET() {
-  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-  if (!session.isLoggedIn || !session.isAdmin) {
+  const ctx = await getAdminTrip()
+  if (!ctx) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  const tripId = ctx.trip.id
 
-  const [destinations, participants, settingsRows, tierTwoVotes] = await Promise.all([
+  const [destinations, members, s, tierTwoVotes] = await Promise.all([
     prisma.destination.findMany({
+      where: { tripId },
       orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
       include: {
         _count: { select: { votes: true } },
@@ -19,22 +19,22 @@ export async function GET() {
         votes: { include: { participant: { select: { displayName: true, username: true } } } },
       },
     }),
-    prisma.participant.findMany({
-      orderBy: { createdAt: 'asc' },
+    prisma.tripParticipant.findMany({
+      where: { tripId },
+      orderBy: { participant: { createdAt: 'asc' } },
       include: {
-        _count: { select: { votes: true } },
-        votes: { select: { destinationId: true } },
+        participant: {
+          include: { votes: { where: { destination: { tripId } }, select: { destinationId: true } } },
+        },
       },
     }),
-    prisma.settings.findMany(),
+    getTripSettings(tripId),
     // graceful fallback if TierTwoVote table not yet migrated in production
     prisma.tierTwoVote.findMany({
+      where: { destination: { tripId } },
       include: { participant: { select: { username: true } } },
     }).catch(() => [] as { destinationId: string; participantId: string; participant: { username: string } }[]),
   ])
-
-  const s: Record<string, string> = {}
-  for (const r of settingsRows) s[r.key] = r.value
 
   const tierTwoOpen = s['tierTwoOpen'] === 'true'
   const tierTwoDestinationIds = (s['tierTwoDestinationIds'] || '').split(',').filter(Boolean)
@@ -57,19 +57,20 @@ export async function GET() {
   const uniqueT2Voters = new Set(tierTwoVotes.map((v) => v.participantId))
 
   return NextResponse.json({
+    trip: ctx.trip,
     destinations: destinations.map((d) => ({
       ...d,
       tags: d.tags ? d.tags.split(',').filter(Boolean) : [],
       voteCount: d._count.votes,
       voters: d.votes.map((v) => v.participant.displayName || v.participant.username),
     })),
-    participants: participants.map((p) => ({
+    participants: members.map(({ participant: p, voteCount }) => ({
       id: p.id,
       username: p.username,
       displayName: p.displayName || '',
-      voteCount: p.voteCount,
-      votesUsed: p._count.votes,
-      remainingVotes: p.voteCount - p._count.votes,
+      voteCount,
+      votesUsed: p.votes.length,
+      remainingVotes: voteCount - p.votes.length,
       createdAt: p.createdAt,
       votedFor: p.votes.map((v) => v.destinationId),
     })),
@@ -83,7 +84,7 @@ export async function GET() {
     },
     tierTwo: {
       tierTwoOpen,
-      totalParticipants: participants.length,
+      totalParticipants: members.length,
       votedCount: uniqueT2Voters.size,
       destinations: tierTwoDestinations,
     },

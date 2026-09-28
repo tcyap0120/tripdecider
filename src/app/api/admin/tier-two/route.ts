@@ -1,25 +1,16 @@
 import { NextResponse } from 'next/server'
-import { getIronSession } from 'iron-session'
-import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { sessionOptions, SessionData } from '@/lib/session'
-
-async function requireAdmin() {
-  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-  if (!session.isLoggedIn || !session.isAdmin) return null
-  return session
-}
+import { getAdminTrip, getTripSettings } from '@/lib/trip'
 
 export async function GET() {
-  if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const ctx = await getAdminTrip()
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const tripId = ctx.trip.id
 
-  const [settingsRows, totalParticipants] = await Promise.all([
-    prisma.settings.findMany(),
-    prisma.participant.count(),
+  const [s, totalParticipants] = await Promise.all([
+    getTripSettings(tripId),
+    prisma.tripParticipant.count({ where: { tripId } }),
   ])
-
-  const s: Record<string, string> = {}
-  for (const r of settingsRows) s[r.key] = r.value
 
   const tierTwoOpen = s['tierTwoOpen'] === 'true'
   const destinationIds = (s['tierTwoDestinationIds'] || '').split(',').filter(Boolean)
@@ -30,13 +21,17 @@ export async function GET() {
 
   const [destinations, allTierTwoVotes] = await Promise.all([
     prisma.destination.findMany({
-      where: { id: { in: destinationIds } },
+      where: { id: { in: destinationIds }, tripId },
       include: {
         _count: { select: { tierTwoVotes: true } },
         tierTwoVotes: { include: { participant: { select: { username: true } } } },
       },
     }),
-    prisma.tierTwoVote.findMany({ select: { participantId: true }, distinct: ['participantId'] }),
+    prisma.tierTwoVote.findMany({
+      where: { destination: { tripId } },
+      select: { participantId: true },
+      distinct: ['participantId'],
+    }),
   ])
 
   return NextResponse.json({

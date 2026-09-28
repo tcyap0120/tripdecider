@@ -1,25 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getIronSession } from 'iron-session'
-import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { sessionOptions, SessionData } from '@/lib/session'
+import { getParticipantTrip, getTripSettings, toPublicSettings } from '@/lib/trip'
 
-async function getParticipant() {
-  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
-  if (!session.isLoggedIn || !session.userId || session.isAdmin) return null
-  return session
+// Returns the participant context if date voting is open and the option belongs to their trip
+async function authorize(dateOptionId: string | undefined) {
+  const ctx = await getParticipantTrip()
+  if (!ctx) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  if (!dateOptionId) return { error: NextResponse.json({ error: 'Missing dateOptionId' }, { status: 400 }) }
+
+  const settings = toPublicSettings(await getTripSettings(ctx.trip.id), ctx.trip.status)
+  if (!settings.dateVotingOpen) return { error: NextResponse.json({ error: 'Date voting is closed' }, { status: 403 }) }
+
+  const option = await prisma.dateOption.findUnique({ where: { id: dateOptionId } })
+  if (!option || option.tripId !== ctx.trip.id) {
+    return { error: NextResponse.json({ error: 'Date option not found' }, { status: 404 }) }
+  }
+  return { ctx }
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getParticipant()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { dateOptionId } = await req.json()
-  if (!dateOptionId) return NextResponse.json({ error: 'Missing dateOptionId' }, { status: 400 })
+  const { ctx, error } = await authorize(dateOptionId)
+  if (error) return error
 
   await prisma.dateVote.upsert({
-    where: { participantId_dateOptionId: { participantId: session.userId!, dateOptionId } },
-    create: { participantId: session.userId!, dateOptionId },
+    where: { participantId_dateOptionId: { participantId: ctx.participantId, dateOptionId } },
+    create: { participantId: ctx.participantId, dateOptionId },
     update: {},
   })
 
@@ -27,14 +33,12 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await getParticipant()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { dateOptionId } = await req.json()
-  if (!dateOptionId) return NextResponse.json({ error: 'Missing dateOptionId' }, { status: 400 })
+  const { ctx, error } = await authorize(dateOptionId)
+  if (error) return error
 
   await prisma.dateVote.deleteMany({
-    where: { participantId: session.userId!, dateOptionId },
+    where: { participantId: ctx.participantId, dateOptionId },
   })
 
   return NextResponse.json({ ok: true })

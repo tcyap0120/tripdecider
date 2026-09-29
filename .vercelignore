@@ -1,0 +1,6 @@
+# Never upload local media or local env files in CLI deploys
+*.mp3
+*.m4a
+*.wav
+.env*
+*.tsbuildinfo

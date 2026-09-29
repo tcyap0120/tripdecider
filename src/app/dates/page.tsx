@@ -34,6 +34,7 @@ export default function DatesPage() {
   const [user, setUser] = useState<UserInfo | null>(null)
   const [dateOptions, setDateOptions] = useState<DateOption[]>([])
   const [dateVotingOpen, setDateVotingOpen] = useState(false)
+  const [confirmed, setConfirmed] = useState<{ start: string; end: string; note: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
 
@@ -49,8 +50,9 @@ export default function DatesPage() {
 
     const s = await settingsRes.json()
     setDateVotingOpen(s.dateVotingOpen)
-
-    if (s.dateVotingOpen) {
+    if (s.confirmedDateStart) {
+      setConfirmed({ start: s.confirmedDateStart, end: s.confirmedDateEnd, note: s.confirmedDateNote })
+    } else if (s.dateVotingOpen) {
       const datesRes = await fetch('/api/date-options')
       if (datesRes.ok) setDateOptions(await datesRes.json())
     }
@@ -124,7 +126,44 @@ export default function DatesPage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-8 relative z-10">
-        {!dateVotingOpen ? (
+        {confirmed ? (
+          /* Date set directly by the organiser */
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="glass-card p-8 sm:p-12 text-center max-w-md w-full animate-slide-up">
+              <div className="text-6xl mb-4 animate-float">🎉</div>
+              <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2">Trip date confirmed</p>
+              {(() => {
+                const s = formatDate(confirmed.start)
+                const e = confirmed.end && confirmed.end !== confirmed.start ? formatDate(confirmed.end) : null
+                const nights = e ? Math.round((new Date(confirmed.end).getTime() - new Date(confirmed.start).getTime()) / 86400000) : 0
+                return (
+                  <>
+                    <div className="flex items-center justify-center gap-3 my-4">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex flex-col items-center justify-center shadow-lg">
+                        <span className="text-xs opacity-80">{s.month}</span>
+                        <span className="text-3xl font-bold leading-none">{s.day}</span>
+                      </div>
+                      {e && (
+                        <>
+                          <span className="text-slate-400 text-2xl">→</span>
+                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-500 text-white flex flex-col items-center justify-center shadow-lg">
+                            <span className="text-xs opacity-80">{e.month}</span>
+                            <span className="text-3xl font-bold leading-none">{e.day}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-display font-bold text-slate-800">{s.full}</h2>
+                    {e && <p className="text-slate-600 font-medium mt-1">to {e.full}</p>}
+                    {nights > 0 && <p className="text-slate-400 text-sm mt-1">{nights + 1} days · {nights} night{nights !== 1 ? 's' : ''}</p>}
+                    {confirmed.note && <p className="text-slate-500 mt-3 bg-slate-50 rounded-xl px-4 py-2 text-sm">{confirmed.note}</p>}
+                  </>
+                )
+              })()}
+              <Link href="/vote" className="btn-primary inline-flex justify-center py-3 px-6 mt-6">← Back</Link>
+            </div>
+          </div>
+        ) : !dateVotingOpen ? (
           /* Coming soon */
           <div className="flex flex-col items-center justify-center py-16">
             <div className="glass-card p-10 sm:p-14 text-center max-w-md w-full animate-slide-up">

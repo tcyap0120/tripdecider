@@ -7,6 +7,7 @@ import { sessionOptions, SessionData } from '@/lib/session'
 const TRIP_SETTING_KEYS = [
   'resultsPublic', 'votingOpen', 'announcement', 'dateVotingOpen',
   'tierTwoOpen', 'tierTwoDestinationIds', 'tierTwoResultsPublic',
+  'confirmedDateStart', 'confirmedDateEnd', 'confirmedDateNote',
 ]
 
 export const LEGACY_TRIP_ID = 'legacy-trip'
@@ -29,7 +30,6 @@ export async function ensureTrips() {
       })
       await tx.destination.updateMany({ where: { tripId: null }, data: { tripId: trip.id } })
       await tx.dateOption.updateMany({ where: { tripId: null }, data: { tripId: trip.id } })
-      await tx.memory.updateMany({ where: { tripId: null }, data: { tripId: trip.id } })
       await tx.message.updateMany({ where: { tripId: null }, data: { tripId: trip.id } })
 
       const participants = await tx.participant.findMany({ select: { id: true, voteCount: true } })
@@ -73,6 +73,16 @@ export function toPublicSettings(s: Record<string, string>, status: string) {
     dateVotingOpen: !past && s['dateVotingOpen'] === 'true',
     tierTwoOpen: s['tierTwoOpen'] === 'true',
     tierTwoResultsPublic: s['tierTwoResultsPublic'] === 'true',
+    ...confirmedDate(s),
+  }
+}
+
+/** Trip date set directly by the admin (no voting needed). Dates are YYYY-MM-DD. */
+export function confirmedDate(s: Record<string, string>) {
+  return {
+    confirmedDateStart: s['confirmedDateStart'] || '',
+    confirmedDateEnd: s['confirmedDateEnd'] || '',
+    confirmedDateNote: s['confirmedDateNote'] || '',
   }
 }
 
@@ -113,6 +123,26 @@ export async function getParticipantTrip() {
   }
 
   return { session, participantId: session.userId, trip: membership.trip, voteCount: membership.voteCount }
+}
+
+/**
+ * Memories are one shared album across all trips. Detach any memory that was
+ * tied to a trip (from before this change) so deleting a trip never removes it.
+ */
+let memoriesDetached = false
+export async function detachMemoriesFromTrips() {
+  if (memoriesDetached) return
+  await prisma.memory.updateMany({ where: { tripId: { not: null } }, data: { tripId: null } })
+  memoriesDetached = true
+}
+
+/** Any logged-in participant or admin, regardless of trip. */
+export async function getViewer() {
+  const session = await getIronSession<SessionData>(await cookies(), sessionOptions)
+  if (!session.isLoggedIn) return null
+  if (session.isAdmin) return { session, participantId: null }
+  if (!session.userId) return null
+  return { session, participantId: session.userId }
 }
 
 /** Resolve the admin session and the trip they are managing. */

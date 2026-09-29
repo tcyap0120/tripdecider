@@ -10,7 +10,6 @@ interface Trip {
   participantIds: string[]
   destinationCount: number
   dateOptionCount: number
-  memoryCount: number
 }
 
 interface ParticipantOption {
@@ -145,7 +144,9 @@ export default function AdminTripsPage() {
   }
 
   async function handleDelete(trip: Trip) {
-    if (!confirm(`Delete "${trip.name}"?\n\nThis permanently removes its ${trip.destinationCount} destinations, all votes, date options, memories and chat. This cannot be undone.`)) return
+    if (!confirm(`Delete "${trip.name}"?\n\nThis permanently removes its ${trip.destinationCount} destinations, all votes, date options and chat. This cannot be undone.
+
+Shared memories are kept.`)) return
     setBusy(trip.id)
     const res = await fetch(`/api/admin/trips/${trip.id}`, { method: 'DELETE' })
     if (!res.ok) {
@@ -195,7 +196,7 @@ export default function AdminTripsPage() {
             </div>
             {trip.description && <p className="text-slate-500 text-sm mt-1">{trip.description}</p>}
             <p className="text-slate-400 text-xs mt-2">
-              🗺️ {trip.destinationCount} destinations · 📅 {trip.dateOptionCount} dates · 📸 {trip.memoryCount} memories · created {new Date(trip.createdAt).toLocaleDateString()}
+              🗺️ {trip.destinationCount} destinations · 📅 {trip.dateOptionCount} dates · created {new Date(trip.createdAt).toLocaleDateString()}
             </p>
             <button
               onClick={() => openParticipants(trip)}
@@ -247,7 +248,7 @@ export default function AdminTripsPage() {
       <div className="flex items-center justify-between mb-6 gap-3">
         <div>
           <h2 className="text-2xl font-display font-bold text-slate-800">🧳 Trips</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Each trip has its own destinations, voting, dates, memories and chat.</p>
+          <p className="text-slate-500 text-sm mt-0.5">Each trip has its own destinations, voting, dates and chat. Memories are shared across all trips.</p>
         </div>
         <button onClick={openCreate} className="btn-primary flex-shrink-0">
           <span>+</span> New Trip

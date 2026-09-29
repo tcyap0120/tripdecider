@@ -42,6 +42,8 @@ interface AppSettings {
   votingOpen: boolean
   announcement: string
   tierTwoOpen: boolean
+  confirmedDateStart?: string
+  confirmedDateEnd?: string
 }
 
 interface Message {
@@ -293,6 +295,19 @@ export default function VotePage() {
             <span className="text-xl flex-shrink-0 mt-0.5">📢</span>
             <p className="text-sm sm:text-base leading-relaxed font-medium">{appSettings.announcement}</p>
           </div>
+        )}
+
+        {/* Trip date set by the organiser */}
+        {appSettings.confirmedDateStart && (
+          <a href="/dates" className="mb-5 flex items-center gap-3 bg-emerald-500/20 backdrop-blur border border-emerald-300/40 rounded-2xl px-4 py-3 text-white shadow-lg hover:bg-emerald-500/30 transition-colors">
+            <span className="text-xl flex-shrink-0">📅</span>
+            <p className="text-sm sm:text-base font-medium">
+              Trip date: <strong>{new Date(appSettings.confirmedDateStart + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+              {appSettings.confirmedDateEnd && appSettings.confirmedDateEnd !== appSettings.confirmedDateStart && (
+                <> → <strong>{new Date(appSettings.confirmedDateEnd + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></>
+              )}
+            </p>
+          </a>
         )}
 
         {/* Level 2 tiebreaker banner */}

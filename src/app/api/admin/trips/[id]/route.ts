@@ -26,8 +26,10 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'You need at least one trip' }, { status: 400 })
   }
 
-  // Destinations, votes, dates, memories and chat for this trip cascade-delete
+  // Destinations, votes, dates and chat for this trip cascade-delete.
+  // Memories are shared across trips, so detach them first to keep them.
   await prisma.$transaction([
+    prisma.memory.updateMany({ where: { tripId: id }, data: { tripId: null } }),
     prisma.settings.deleteMany({ where: { key: { startsWith: `${id}:` } } }),
     prisma.trip.delete({ where: { id } }),
   ])

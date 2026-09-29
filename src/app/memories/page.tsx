@@ -66,7 +66,6 @@ export default function MemoriesPage() {
     const [meRes, memRes] = await Promise.all([fetch('/api/auth/me'), fetch('/api/memories')])
     const me = await meRes.json()
     if (!me.isLoggedIn) { router.replace('/login'); return }
-    if (!me.trip) { router.replace('/trips'); return }
     setUser(me)
     if (memRes.ok) setMemories(await memRes.json())
     setLoading(false)

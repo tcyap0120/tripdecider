@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAdminTrip, getTripSettings, setTripSetting } from '@/lib/trip'
+import { confirmedDate, getAdminTrip, getTripSettings, setTripSetting } from '@/lib/trip'
 
 export async function GET() {
   const ctx = await getAdminTrip()
@@ -13,6 +13,7 @@ export async function GET() {
     announcement: settings['announcement'] || '',
     dateVotingOpen: settings['dateVotingOpen'] === 'true',
     tierTwoOpen: settings['tierTwoOpen'] === 'true',
+    ...confirmedDate(settings),
   })
 }
 

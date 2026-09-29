@@ -11,7 +11,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       include: {
         participants: { select: { participantId: true } },
-        _count: { select: { destinations: true, dateOptions: true, memories: true } },
+        _count: { select: { destinations: true, dateOptions: true } },
       },
     }),
     prisma.participant.findMany({
@@ -32,7 +32,6 @@ export async function GET() {
       participantIds: t.participants.map((p) => p.participantId),
       destinationCount: t._count.destinations,
       dateOptionCount: t._count.dateOptions,
-      memoryCount: t._count.memories,
     })),
   })
 }

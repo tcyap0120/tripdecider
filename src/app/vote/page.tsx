@@ -296,7 +296,8 @@ export default function VotePage() {
           </div>
         </div>
 
-        {/* Vote progress */}
+        {/* Vote progress — only while voting is open */}
+        {votingOpen && (
         <div className="max-w-6xl mx-auto px-3 sm:px-4 pb-2">
           <div className="text-xs text-cyan-200 mb-1">
             {isLocked
@@ -312,6 +313,7 @@ export default function VotePage() {
             />
           </div>
         </div>
+        )}
       </header>
 
       {/* ── MAIN CONTENT ── */}
@@ -399,6 +401,36 @@ export default function VotePage() {
             )
           })()}
         </div>
+
+        {/* How many votes you have — must use them all */}
+        {votingOpen && !isLocked && (user?.voteCount ?? 0) > 0 && (() => {
+          const total = user?.voteCount ?? 0
+          const left = total - pending.size
+          return (
+            <div className="glass-card mb-5 px-4 py-4 sm:px-5 flex items-center gap-4 animate-fade-in">
+              <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-400 text-white flex flex-col items-center justify-center shadow-md">
+                <span className="text-2xl font-display font-extrabold leading-none">{total}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide">vote{total !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-display font-bold text-slate-800 text-sm sm:text-base leading-snug">
+                  You have {total} vote{total !== 1 ? 's' : ''}. You must use all {total} to submit.
+                </p>
+                <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+                  Pick {total} different destination{total !== 1 ? 's' : ''}, then tap <strong>Submit</strong>.{' '}
+                  {left > 0
+                    ? <span className="text-amber-600 font-semibold">{left} left to pick.</span>
+                    : <span className="text-emerald-600 font-semibold">All picked, ready to submit!</span>}
+                </p>
+                <div className="flex gap-1 mt-2">
+                  {Array.from({ length: total }).map((_, i) => (
+                    <span key={i} className={`h-1.5 flex-1 max-w-10 rounded-full ${i < pending.size ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Voting closed banner */}
         {!votingOpen && (

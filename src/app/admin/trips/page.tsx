@@ -38,6 +38,45 @@ export default function AdminTripsPage() {
   const [error, setError] = useState('')
   const mouseDownTarget = useRef<EventTarget | null>(null)
 
+  // App-wide login music
+  const [music, setMusic] = useState<{ hasMusic: boolean; size?: number; updatedAt?: string } | null>(null)
+  const [musicBusy, setMusicBusy] = useState(false)
+  const [musicError, setMusicError] = useState('')
+  const musicInput = useRef<HTMLInputElement>(null)
+
+  async function loadMusic() {
+    const res = await fetch('/api/admin/music')
+    if (res.ok) setMusic(await res.json())
+  }
+
+  useEffect(() => { loadMusic() }, [])
+
+  async function uploadMusic(file: File) {
+    setMusicError('')
+    if (file.size > 4.4 * 1024 * 1024) { setMusicError('File too large. Max 4.4 MB (about 4 minutes of MP3).'); return }
+    setMusicBusy(true)
+    const res = await fetch('/api/admin/music', {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'audio/mpeg' },
+      body: file,
+    })
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      setMusicError(d.error || 'Upload failed')
+    }
+    await loadMusic()
+    setMusicBusy(false)
+    if (musicInput.current) musicInput.current.value = ''
+  }
+
+  async function removeMusic() {
+    if (!confirm('Remove the login music?')) return
+    setMusicBusy(true)
+    await fetch('/api/admin/music', { method: 'DELETE' })
+    await loadMusic()
+    setMusicBusy(false)
+  }
+
   async function load() {
     const res = await fetch('/api/admin/trips')
     if (res.ok) {
@@ -269,6 +308,46 @@ Shared memories are kept.`)) return
             <div className="space-y-3">{pastTrips.map((t) => <TripRow key={t.id} trip={t} />)}</div>
           </section>
         )}
+      </div>
+
+      {/* Login music (app-wide) */}
+      <div className="mt-10 bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h3 className="font-display font-bold text-slate-800 text-lg">🎵 Login music</h3>
+            <p className="text-slate-500 text-sm mt-0.5">
+              Plays once (no loop) right after a participant logs in. They can pause or stop it anytime.
+              Only logged-in users can load it.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              ref={musicInput}
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadMusic(f) }}
+            />
+            <button onClick={() => musicInput.current?.click()} disabled={musicBusy} className="btn-primary text-sm py-2 px-4">
+              {musicBusy ? '⏳ Working…' : music?.hasMusic ? 'Replace' : '⬆️ Upload MP3'}
+            </button>
+            {music?.hasMusic && (
+              <button onClick={removeMusic} disabled={musicBusy} className="text-red-500 hover:text-red-700 font-medium text-sm px-3 py-2 rounded-xl hover:bg-red-50 transition-colors">
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="mt-3 text-sm">
+          {music?.hasMusic ? (
+            <span className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl px-3 py-1.5">
+              ✅ Music set · {((music.size ?? 0) / 1024 / 1024).toFixed(1)} MB · updated {new Date(music.updatedAt!).toLocaleDateString()}
+            </span>
+          ) : (
+            <span className="text-slate-400">No music set. Participants log in silently.</span>
+          )}
+          {musicError && <p className="text-red-500 mt-2">❌ {musicError}</p>}
+        </div>
       </div>
 
       {modal && (

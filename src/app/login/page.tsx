@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { startLoginMusic, stopMusic } from '@/lib/music'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    stopMusic() // back on the login screen (e.g. after logging out)
     fetch('/api/auth/me').then((r) => r.json()).then((d) => {
       if (d.isLoggedIn) router.replace('/vote')
     })
@@ -27,6 +29,7 @@ export default function LoginPage() {
     const data = await res.json()
     setLoading(false)
     if (!res.ok) { setError(data.error || 'Login failed'); return }
+    startLoginMusic()
     // Straight into the trip if there's only one; otherwise let them pick
     router.push(data.tripCount === 1 ? '/vote' : '/trips')
   }

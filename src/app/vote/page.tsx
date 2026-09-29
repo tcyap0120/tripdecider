@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import TravelFooter from '@/components/TravelFooter'
 import WelcomePopup from '@/components/WelcomePopup'
 
@@ -281,22 +282,22 @@ export default function VotePage() {
           {/* Nav */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {showResults && (
-              <a href="/results" className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold text-xs px-3 py-1.5 rounded-full transition-all shadow-sm">
+              <Link href="/results" className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold text-xs px-3 py-1.5 rounded-full transition-all shadow-sm">
                 <span>🏆</span><span className="hidden sm:inline">Results</span>
-              </a>
+              </Link>
             )}
-            <a href="/trips" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
+            <Link href="/trips" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
               <span>🧳</span><span className="hidden sm:inline">Trips</span>
-            </a>
-            <a href="/dates" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
+            </Link>
+            <Link href="/dates" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
               <span>📅</span><span className="hidden sm:inline">Dates</span>
-            </a>
-            <a href="/memories" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
+            </Link>
+            <Link href="/memories" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
               <span>📸</span><span className="hidden sm:inline">Memories</span>
-            </a>
-            <a href="/discussion" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
+            </Link>
+            <Link href="/discussion" className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-xs px-3 py-1.5 rounded-full transition-all">
               <span>💬</span><span className="hidden sm:inline">Discussion</span>
-            </a>
+            </Link>
             {votingOpen && (
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0 shadow-sm ${
                 isLocked || pending.size >= (user?.voteCount ?? 0) ? 'bg-emerald-400 text-emerald-900' : 'bg-amber-400 text-amber-900'
@@ -343,7 +344,7 @@ export default function VotePage() {
 
         {/* Trip date set by the organiser */}
         {appSettings.confirmedDateStart && (
-          <a href="/dates" className="mb-5 flex items-center gap-3 bg-emerald-500/20 backdrop-blur border border-emerald-300/40 rounded-2xl px-4 py-3 text-white shadow-lg hover:bg-emerald-500/30 transition-colors">
+          <Link href="/dates" className="mb-5 flex items-center gap-3 bg-emerald-500/20 backdrop-blur border border-emerald-300/40 rounded-2xl px-4 py-3 text-white shadow-lg hover:bg-emerald-500/30 transition-colors">
             <span className="text-xl flex-shrink-0">📅</span>
             <p className="text-sm sm:text-base font-medium">
               Trip date: <strong>{new Date(appSettings.confirmedDateStart + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
@@ -351,13 +352,13 @@ export default function VotePage() {
                 <> → <strong>{new Date(appSettings.confirmedDateEnd + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></>
               )}
             </p>
-          </a>
+          </Link>
         )}
 
         {/* Level 2 tiebreaker banner */}
         {appSettings.tierTwoOpen && user?.trip?.status !== 'past' && (
           <div className="mb-5 animate-fade-in">
-            <a
+            <Link
               href="/tier-two"
               className="flex items-center gap-3 px-4 py-6 rounded-2xl text-white shadow-xl transition-all hover:scale-[1.01] hover:shadow-2xl active:scale-[0.99]"
               style={{ background: 'linear-gradient(135deg, #302b63, #7c3aed, #dc2626)' }}
@@ -371,7 +372,7 @@ export default function VotePage() {
                 <p className="text-white/70 text-xs mt-0.5">Two destinations tied — cast your final vote now →</p>
               </div>
               <span className="text-white/60 text-lg flex-shrink-0">›</span>
-            </a>
+            </Link>
           </div>
         )}
 
@@ -452,7 +453,7 @@ export default function VotePage() {
           <div className="glass-card px-4 py-3 text-center mb-5 flex items-center justify-center gap-2 text-slate-700 font-semibold text-sm sm:text-base">
             <span>{user?.trip?.status === 'past' ? '📜' : '🔒'}</span>
             {user?.trip?.status === 'past' ? 'This is a past trip — voting has ended.' : 'Voting is now closed.'}{' '}
-            {showResults ? <a href="/results" className="text-sky-600 hover:underline ml-1">View results →</a> : ' Results coming soon!'}
+            {showResults ? <Link href="/results" className="text-sky-600 hover:underline ml-1">View results →</Link> : ' Results coming soon!'}
           </div>
         )}
 
@@ -460,7 +461,7 @@ export default function VotePage() {
         {showResults && (
           <div className="bg-amber-400/20 backdrop-blur border border-amber-300/40 rounded-2xl px-4 py-3 text-center mb-5 flex items-center justify-center gap-2 text-white font-semibold text-sm sm:text-base">
             <span>🏆</span> Results are now live!{' '}
-            <a href="/results" className="underline hover:text-amber-200 ml-1">See Round 1 Full Results →</a>
+            <Link href="/results" className="underline hover:text-amber-200 ml-1">See Round 1 Full Results →</Link>
           </div>
         )}
 

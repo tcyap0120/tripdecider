@@ -160,3 +160,11 @@ model Message {
   createdAt     DateTime    @default(now())
   participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 }
+
+// Small app-wide files uploaded by the admin (e.g. login music). Served only to logged-in users.
+model AppFile {
+  key       String   @id
+  mimeType  String
+  data      Bytes
+  updatedAt DateTime @updatedAt
+}

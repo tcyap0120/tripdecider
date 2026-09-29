@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import MusicToggle from '@/components/MusicToggle'
 
 export const metadata: Metadata = {
   title: 'TripDecider — Vote for Your Dream Destination',
@@ -10,7 +11,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <MusicToggle />
+      </body>
     </html>
   )
 }

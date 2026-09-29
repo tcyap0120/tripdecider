@@ -214,3 +214,32 @@ h1, h2, h3 {
   50% { transform: scale(1.15); }
   100% { transform: scale(1); }
 }
+
+/* ── Ambient sky (participant pages) ── */
+@keyframes driftAcross {
+  from { transform: translateX(-20vw); }
+  to { transform: translateX(120vw); }
+}
+@keyframes flyAcross {
+  0% { transform: translate(-10vw, 0) rotate(8deg); opacity: 0; }
+  3% { opacity: 0.5; }
+  30% { transform: translate(55vw, -6vh) rotate(4deg); }
+  52% { opacity: 0.5; }
+  55%, 100% { transform: translate(115vw, -2vh) rotate(8deg); opacity: 0; }
+}
+.sky-cloud { position: absolute; left: 0; animation: driftAcross linear infinite; will-change: transform; }
+.sky-plane { position: absolute; left: 0; animation: flyAcross 45s ease-in-out infinite; will-change: transform; }
+
+/* Buttons squish a little when pressed */
+.btn-primary:not(:disabled):active,
+.btn-ghost:active { transform: scale(0.96); }
+
+/* Respect "reduce motion": keep the site calm for people who ask for it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .ambient-sky { display: none; }
+}

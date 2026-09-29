@@ -64,13 +64,14 @@ export default function TripsPage() {
   const activeTrips = trips.filter((t) => t.status !== 'past')
   const pastTrips = trips.filter((t) => t.status === 'past')
 
-  function TripCard({ trip }: { trip: Trip }) {
+  function TripCard({ trip, idx }: { trip: Trip; idx: number }) {
     const isPast = trip.status === 'past'
     return (
       <button
         onClick={() => openTrip(trip.id)}
         disabled={opening !== null}
-        className={`group text-left w-full overflow-hidden rounded-2xl bg-white shadow-lg transition-all hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.99] ${
+        style={{ animationDelay: `${idx * 0.08}s` }}
+        className={`animate-pop-in group text-left w-full overflow-hidden rounded-2xl bg-white shadow-lg transition-shadow hover:shadow-2xl active:scale-[0.99] ${
           trip.id === currentTripId ? 'ring-4 ring-amber-300' : ''
         }`}
       >
@@ -109,7 +110,7 @@ export default function TripsPage() {
       <header className="sticky top-0 z-40 bg-gradient-to-r from-black/20 to-black/10 backdrop-blur-xl border-b border-white/15 shadow-lg">
         <div className="max-w-4xl mx-auto px-3 sm:px-5 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-lg shadow-inner border border-white/20 flex-shrink-0">🏝️</div>
+            <div className="w-9 h-9 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-lg shadow-inner border border-white/20 flex-shrink-0"><span className="animate-bob inline-block">🏝️</span></div>
             <div className="min-w-0">
               <h1 className="font-display font-extrabold text-white text-base leading-none tracking-tight">Trip<span className="text-cyan-300">Decider</span></h1>
               <p className="text-white/55 text-xs truncate mt-0.5">Hi, {displayName}! 👋</p>
@@ -139,7 +140,7 @@ export default function TripsPage() {
               <section>
                 <h3 className="text-white/80 text-xs font-bold uppercase tracking-widest mb-3">Upcoming</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {activeTrips.map((t) => <TripCard key={t.id} trip={t} />)}
+                  {activeTrips.map((t, i) => <TripCard key={t.id} trip={t} idx={i} />)}
                 </div>
               </section>
             )}
@@ -147,7 +148,7 @@ export default function TripsPage() {
               <section>
                 <h3 className="text-white/80 text-xs font-bold uppercase tracking-widest mb-3">Past trips</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {pastTrips.map((t) => <TripCard key={t.id} trip={t} />)}
+                  {pastTrips.map((t, i) => <TripCard key={t.id} trip={t} idx={activeTrips.length + i} />)}
                 </div>
               </section>
             )}

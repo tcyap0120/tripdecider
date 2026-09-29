@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import MusicToggle from '@/components/MusicToggle'
+import AmbientSky from '@/components/AmbientSky'
 
 export const metadata: Metadata = {
   title: 'TripDecider — Vote for Your Dream Destination',
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <AmbientSky />
         {children}
         <MusicToggle />
       </body>

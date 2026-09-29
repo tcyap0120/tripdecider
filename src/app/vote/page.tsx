@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import TravelFooter from '@/components/TravelFooter'
 import WelcomePopup from '@/components/WelcomePopup'
+import { ConfettiRain, SparkleBurst } from '@/components/Celebrate'
 
 interface MediaItem {
   id: string
@@ -94,6 +95,9 @@ export default function VotePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortKey>('default')
   const [showWelcome, setShowWelcome] = useState(false)
+  // Little celebrations: sparkle on select, confetti on submit
+  const [burst, setBurst] = useState<{ id: string; key: number } | null>(null)
+  const [confettiKey, setConfettiKey] = useState(0)
 
   // Discussion state
   const [messages, setMessages] = useState<Message[]>([])
@@ -165,6 +169,10 @@ export default function VotePage() {
   }, [chatOpen, messages.length])
 
   function handleTogglePending(destId: string) {
+    if (!pending.has(destId)) {
+      setBurst({ id: destId, key: Date.now() })
+      setTimeout(() => setBurst((b) => (b?.id === destId ? null : b)), 1100)
+    }
     setPending((prev) => {
       const next = new Set(prev)
       if (next.has(destId)) next.delete(destId)
@@ -183,6 +191,7 @@ export default function VotePage() {
       ...toRemove.map((id) => fetch('/api/votes', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destinationId: id }) })),
     ])
     setJustSubmitted(true)
+    setConfettiKey(Date.now())
     setEditMode(false)
     await loadData()
     setSubmitting(false)
@@ -272,7 +281,7 @@ export default function VotePage() {
         <div className="max-w-6xl mx-auto px-3 sm:px-5 py-3 flex items-center justify-between gap-3">
           {/* Brand */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-lg shadow-inner border border-white/20 flex-shrink-0">🏝️</div>
+            <div className="w-9 h-9 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-lg shadow-inner border border-white/20 flex-shrink-0"><span className="animate-bob inline-block">🏝️</span></div>
             <div className="min-w-0">
               <h1 className="font-display font-extrabold text-white text-base leading-none tracking-tight">Trip<span className="text-cyan-300">Decider</span></h1>
               <p className="text-white/55 text-xs truncate mt-0.5">Hi, {user?.displayName || user?.username}! 👋 · <span className="text-cyan-200 font-semibold">{user?.trip?.name}</span></p>
@@ -312,24 +321,6 @@ export default function VotePage() {
           </div>
         </div>
 
-        {/* Vote progress — only while voting is open */}
-        {votingOpen && (
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 pb-2">
-          <div className="text-xs text-cyan-200 mb-1">
-            {isLocked
-              ? `✅ Your votes are locked in`
-              : pending.size === (user?.voteCount ?? 0)
-              ? `✅ All ${user?.voteCount} selected — hit Submit to confirm!`
-              : `Select ${(user?.voteCount ?? 0) - pending.size} more destination${(user?.voteCount ?? 0) - pending.size !== 1 ? 's' : ''} to continue`}
-          </div>
-          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${isLocked ? 'bg-gradient-to-r from-emerald-400 to-green-400' : 'bg-gradient-to-r from-amber-400 to-orange-400'}`}
-              style={{ width: isLocked ? '100%' : `${(pending.size / (user?.voteCount ?? 1)) * 100}%` }}
-            />
-          </div>
-        </div>
-        )}
       </header>
 
       {/* ── MAIN CONTENT ── */}
@@ -347,9 +338,9 @@ export default function VotePage() {
           <Link href="/dates" className="mb-5 flex items-center gap-3 bg-emerald-500/20 backdrop-blur border border-emerald-300/40 rounded-2xl px-4 py-3 text-white shadow-lg hover:bg-emerald-500/30 transition-colors">
             <span className="text-xl flex-shrink-0">📅</span>
             <p className="text-sm sm:text-base font-medium">
-              Trip date: <strong>{new Date(appSettings.confirmedDateStart + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+              Trip date: <strong>{new Date(appSettings.confirmedDateStart + 'T00:00:00').toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</strong>
               {appSettings.confirmedDateEnd && appSettings.confirmedDateEnd !== appSettings.confirmedDateStart && (
-                <> → <strong>{new Date(appSettings.confirmedDateEnd + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></>
+                <> → <strong>{new Date(appSettings.confirmedDateEnd + 'T00:00:00').toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</strong></>
               )}
             </p>
           </Link>
@@ -493,11 +484,8 @@ export default function VotePage() {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {visibleDestinations.map((dest, idx) => (
-              <div
-                key={dest.id}
-                className="destination-card animate-fade-in"
-                style={{ animationDelay: `${idx * 0.08}s` }}
-              >
+              <div key={dest.id} className="animate-pop-in" style={{ animationDelay: `${Math.min(idx, 8) * 0.07}s` }}>
+              <div className={`destination-card h-full ${burst?.id === dest.id ? 'animate-jelly' : ''}`}>
                 {/* Photo */}
                 <div className="relative h-44 sm:h-52 overflow-hidden">
                   <img
@@ -679,6 +667,8 @@ export default function VotePage() {
                       {dest.hasVoted ? <><span>✅</span> Your vote</> : <><span>—</span> Not selected</>}
                     </div>
                   ) : (
+                    <div className="relative">
+                    {burst?.id === dest.id && <SparkleBurst key={burst.key} />}
                     <button
                       onClick={() => handleTogglePending(dest.id)}
                       disabled={submitting || (!pending.has(dest.id) && pending.size >= (user?.voteCount ?? 0))}
@@ -698,6 +688,7 @@ export default function VotePage() {
                         <><span>+</span> Select this</>
                       )}
                     </button>
+                    </div>
                   )}
                 </div>
 
@@ -715,6 +706,7 @@ export default function VotePage() {
                     </div>
                   </div>
                 )}
+              </div>
               </div>
             ))}
           </div>
@@ -857,6 +849,8 @@ export default function VotePage() {
       )}
 
       <TravelFooter />
+
+      {confettiKey > 0 && <ConfettiRain key={confettiKey} />}
 
       {showWelcome && user && (
         <WelcomePopup

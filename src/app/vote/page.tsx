@@ -55,6 +55,29 @@ interface Message {
   participantId: string
 }
 
+type SortKey = 'default' | 'costAsc' | 'costDesc' | 'nameAsc' | 'nameDesc'
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: 'default', label: 'Default' },
+  { key: 'costAsc', label: '💰 Cost ↑' },
+  { key: 'costDesc', label: '💰 Cost ↓' },
+  { key: 'nameAsc', label: 'A–Z' },
+  { key: 'nameDesc', label: 'Z–A' },
+]
+
+const totalCost = (d: Destination) => d.accommodationPrice + d.otherPrice
+
+function sortDestinations(list: Destination[], sortBy: SortKey) {
+  const sorted = [...list]
+  switch (sortBy) {
+    case 'costAsc': return sorted.sort((a, b) => totalCost(a) - totalCost(b))
+    case 'costDesc': return sorted.sort((a, b) => totalCost(b) - totalCost(a))
+    case 'nameAsc': return sorted.sort((a, b) => a.name.localeCompare(b.name))
+    case 'nameDesc': return sorted.sort((a, b) => b.name.localeCompare(a.name))
+    default: return sorted
+  }
+}
+
 export default function VotePage() {
   const router = useRouter()
   const [user, setUser] = useState<UserInfo | null>(null)
@@ -66,6 +89,7 @@ export default function VotePage() {
   const [justSubmitted, setJustSubmitted] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [sortBy, setSortBy] = useState<SortKey>('default')
 
   // Discussion state
   const [messages, setMessages] = useState<Message[]>([])
@@ -191,6 +215,9 @@ export default function VotePage() {
   const totalVotes = destinations.reduce((s, d) => s + d.voteCount, 0)
   const sortedByVotes = [...destinations].sort((a, b) => b.voteCount - a.voteCount)
   const topDest = sortedByVotes[0]
+  // Medal rank by votes, independent of how the list is sorted
+  const voteRank = new Map(sortedByVotes.filter((d) => d.voteCount > 0).map((d, i) => [d.id, i]))
+  const visibleDestinations = sortDestinations(destinations, sortBy)
   const showResults = appSettings.resultsPublic
   const votingOpen = appSettings.votingOpen
   const hasSubmitted = (user?.votesUsed ?? 0) > 0 && (user?.votesUsed ?? 0) >= (user?.voteCount ?? 1)
@@ -397,8 +424,27 @@ export default function VotePage() {
             <p className="text-slate-500 text-sm sm:text-base">The admin hasn&apos;t added any destinations. Check back soon!</p>
           </div>
         ) : (
+          <>
+          {destinations.length > 1 && (
+            <div className="mb-4 flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <span className="text-white/70 text-xs font-semibold flex-shrink-0">Sort:</span>
+              {SORT_OPTIONS.map((o) => (
+                <button
+                  key={o.key}
+                  onClick={() => setSortBy(o.key)}
+                  className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
+                    sortBy === o.key
+                      ? 'bg-white text-sky-700 border-white shadow'
+                      : 'bg-white/10 text-white border-white/25 hover:bg-white/20'
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {destinations.map((dest, idx) => (
+            {visibleDestinations.map((dest, idx) => (
               <div
                 key={dest.id}
                 className="destination-card animate-fade-in"
@@ -419,10 +465,10 @@ export default function VotePage() {
                       {showResults && <span>{dest.voteCount}</span>}
                     </div>
                   </div>
-                  {showResults && idx < 3 && totalVotes > 0 && (
+                  {showResults && (voteRank.get(dest.id) ?? 99) < 3 && (
                     <div className="absolute top-3 left-3">
                       <div className="bg-amber-400 text-amber-900 font-bold text-xs px-2 py-0.5 rounded-full">
-                        {['🥇', '🥈', '🥉'][idx]}
+                        {['🥇', '🥈', '🥉'][voteRank.get(dest.id)!]}
                       </div>
                     </div>
                   )}
@@ -441,7 +487,7 @@ export default function VotePage() {
                   {/* Per-pax price breakdown */}
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Est. Cost Per Pax</span>
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Est. Cost Per Pax*</span>
                       {dest.link && (
                         <a
                           href={dest.link.startsWith('http') ? dest.link : `https://${dest.link}`}
@@ -624,6 +670,11 @@ export default function VotePage() {
               </div>
             ))}
           </div>
+          <p className="mt-6 text-center text-[11px] leading-snug text-white/60 max-w-xl mx-auto">
+            * All prices shown are rough estimates for reference only and may not be 100% accurate.
+            Actual costs may vary depending on dates, availability and group size.
+          </p>
+          </>
         )}
       </main>
 

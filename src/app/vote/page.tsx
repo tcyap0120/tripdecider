@@ -98,6 +98,7 @@ export default function VotePage() {
   // Little celebrations: sparkle on select, confetti on submit
   const [burst, setBurst] = useState<{ id: string; key: number } | null>(null)
   const [confettiKey, setConfettiKey] = useState(0)
+  const [members, setMembers] = useState<{ id: string; name: string; isMe: boolean }[]>([])
 
   // Discussion state
   const [messages, setMessages] = useState<Message[]>([])
@@ -114,11 +115,13 @@ export default function VotePage() {
   const [sendingComment, setSendingComment] = useState(false)
 
   const loadData = useCallback(async () => {
-    const [meRes, destRes, settingsRes] = await Promise.all([
+    const [meRes, destRes, settingsRes, membersRes] = await Promise.all([
       fetch('/api/auth/me'),
       fetch('/api/destinations'),
       fetch('/api/settings'),
+      fetch('/api/trips/members'),
     ])
+    if (membersRes.ok) setMembers(await membersRes.json())
     const meData = await meRes.json()
     if (!meData.isLoggedIn) { router.replace('/login'); return }
     if (!meData.trip) { router.replace('/trips'); return }
@@ -408,6 +411,34 @@ export default function VotePage() {
             )
           })()}
         </div>
+
+        {/* Who's on this trip — names only, never anyone's voting status */}
+        {members.length > 0 && (
+          <div className="mb-5 text-center">
+            <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-2">
+              👥 Who&apos;s on this trip · {members.length}
+            </p>
+            <div className="flex flex-wrap justify-center gap-1.5 max-w-3xl mx-auto">
+              {members.map((m, i) => (
+                <span
+                  key={m.id}
+                  className={`animate-pop-in inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1 text-xs font-semibold border ${
+                    m.isMe ? 'bg-white text-sky-700 border-white shadow' : 'bg-white/15 text-white border-white/25'
+                  }`}
+                  style={{ animationDelay: `${Math.min(i, 12) * 0.04}s` }}
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    m.isMe ? 'bg-gradient-to-br from-sky-400 to-teal-400 text-white' : 'bg-white/25 text-white'
+                  }`}>
+                    {m.name.charAt(0).toUpperCase()}
+                  </span>
+                  {m.name}
+                  {m.isMe && <span className="text-[10px] font-bold text-sky-500">You</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* How many votes you have — must use them all */}
         {votingOpen && !isLocked && (user?.voteCount ?? 0) > 0 && (() => {

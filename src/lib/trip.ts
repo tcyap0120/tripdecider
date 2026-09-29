@@ -6,7 +6,7 @@ import { sessionOptions, SessionData } from '@/lib/session'
 // Trip-scoped settings live in the Settings table as `${tripId}:${key}`.
 const TRIP_SETTING_KEYS = [
   'resultsPublic', 'votingOpen', 'announcement', 'dateVotingOpen',
-  'tierTwoOpen', 'tierTwoDestinationIds', 'tierTwoResultsPublic',
+  'tierTwoEnabled', 'tierTwoOpen', 'tierTwoDestinationIds', 'tierTwoResultsPublic',
   'confirmedDateStart', 'confirmedDateEnd', 'confirmedDateNote',
 ]
 
@@ -71,10 +71,20 @@ export function toPublicSettings(s: Record<string, string>, status: string) {
     votingOpen: !past && s['votingOpen'] !== 'false',
     announcement: s['announcement'] || '',
     dateVotingOpen: !past && s['dateVotingOpen'] === 'true',
-    tierTwoOpen: s['tierTwoOpen'] === 'true',
+    tierTwoOpen: tierTwoState(s).open,
     tierTwoResultsPublic: s['tierTwoResultsPublic'] === 'true',
     ...confirmedDate(s),
   }
+}
+
+/**
+ * Level 2 tiebreaker has a master switch (tierTwoEnabled, off by default).
+ * Round 2 is only live when the switch is on AND the admin has activated it.
+ * Trips from before the switch existed count as enabled if Round 2 was already open.
+ */
+export function tierTwoState(s: Record<string, string>) {
+  const enabled = s['tierTwoEnabled'] !== undefined ? s['tierTwoEnabled'] === 'true' : s['tierTwoOpen'] === 'true'
+  return { enabled, open: enabled && s['tierTwoOpen'] === 'true' }
 }
 
 /** Trip date set directly by the admin (no voting needed). Dates are YYYY-MM-DD. */

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminTrip, getTripSettings } from '@/lib/trip'
+import { getAdminTrip, getTripSettings, tierTwoState } from '@/lib/trip'
 
 export async function GET() {
   const ctx = await getAdminTrip()
@@ -36,7 +36,7 @@ export async function GET() {
     }).catch(() => [] as { destinationId: string; participantId: string; participant: { username: string } }[]),
   ])
 
-  const tierTwoOpen = s['tierTwoOpen'] === 'true'
+  const { enabled: tierTwoEnabled, open: tierTwoOpen } = tierTwoState(s)
   const tierTwoDestinationIds = (s['tierTwoDestinationIds'] || '').split(',').filter(Boolean)
 
   const tierTwoDestinations = tierTwoDestinationIds.length >= 2
@@ -79,6 +79,7 @@ export async function GET() {
       votingOpen: s['votingOpen'] !== 'false',
       announcement: s['announcement'] || '',
       dateVotingOpen: s['dateVotingOpen'] === 'true',
+      tierTwoEnabled,
       tierTwoOpen,
       tierTwoResultsPublic: s['tierTwoResultsPublic'] === 'true',
     },

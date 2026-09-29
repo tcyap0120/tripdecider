@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminTrip, getTripSettings } from '@/lib/trip'
+import { getAdminTrip, getTripSettings, tierTwoState } from '@/lib/trip'
 
 export async function GET() {
   const ctx = await getAdminTrip()
@@ -12,7 +12,7 @@ export async function GET() {
     prisma.tripParticipant.count({ where: { tripId } }),
   ])
 
-  const tierTwoOpen = s['tierTwoOpen'] === 'true'
+  const tierTwoOpen = tierTwoState(s).open
   const destinationIds = (s['tierTwoDestinationIds'] || '').split(',').filter(Boolean)
 
   if (destinationIds.length < 2) {

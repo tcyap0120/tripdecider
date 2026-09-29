@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getParticipantTrip, getTripSettings } from '@/lib/trip'
+import { getParticipantTrip, getTripSettings, tierTwoState } from '@/lib/trip'
 
 export async function GET() {
   const ctx = await getParticipantTrip()
@@ -11,7 +11,7 @@ export async function GET() {
   // Fetch settings first — never touches TierTwoVote table
   const s = await getTripSettings(ctx.trip.id)
 
-  const tierTwoOpen = s['tierTwoOpen'] === 'true'
+  const tierTwoOpen = tierTwoState(s).open
   const destinationIds = (s['tierTwoDestinationIds'] || '').split(',').filter(Boolean)
   const tierTwoResultsPublic = s['tierTwoResultsPublic'] === 'true'
 
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 
   const s = await getTripSettings(ctx.trip.id)
 
-  if (s['tierTwoOpen'] !== 'true' || ctx.trip.status === 'past') {
+  if (!tierTwoState(s).open || ctx.trip.status === 'past') {
     return NextResponse.json({ error: 'Level 2 voting is not open' }, { status: 403 })
   }
 

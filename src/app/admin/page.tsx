@@ -25,6 +25,7 @@ interface AppSettings {
   resultsPublic: boolean
   votingOpen: boolean
   announcement: string
+  tierTwoEnabled: boolean
   tierTwoOpen: boolean
   tierTwoResultsPublic: boolean
 }
@@ -39,7 +40,7 @@ interface TierTwoStats {
 export default function AdminDashboard() {
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [participants, setParticipants] = useState<Participant[]>([])
-  const [settings, setSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '', tierTwoOpen: false, tierTwoResultsPublic: false })
+  const [settings, setSettings] = useState<AppSettings>({ resultsPublic: false, votingOpen: true, announcement: '', tierTwoEnabled: false, tierTwoOpen: false, tierTwoResultsPublic: false })
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
   const [announcementDraft, setAnnouncementDraft] = useState('')
@@ -55,7 +56,7 @@ export default function AdminDashboard() {
         if (!dests) return // auth error or malformed response
         setDestinations(dests)
         setParticipants(parts ?? [])
-        setSettings(s ?? { resultsPublic: false, votingOpen: true, announcement: '', tierTwoOpen: false })
+        setSettings(s ?? { resultsPublic: false, votingOpen: true, announcement: '', tierTwoEnabled: false, tierTwoOpen: false, tierTwoResultsPublic: false })
         setAnnouncementDraft(s?.announcement ?? '')
         setTierTwoStats(t2 ?? null)
         setLoading(false)
@@ -93,7 +94,7 @@ export default function AdminDashboard() {
     if (res.ok) {
       const { tierTwo: t2, settings: s } = await res.json()
       setTierTwoStats(t2)
-      setSettings((prev) => ({ ...prev, tierTwoOpen: s.tierTwoOpen }))
+      setSettings((prev) => ({ ...prev, tierTwoEnabled: s.tierTwoEnabled, tierTwoOpen: s.tierTwoOpen }))
     }
   }
 
@@ -109,6 +110,19 @@ export default function AdminDashboard() {
       body: JSON.stringify({ tierTwoOpen: true, tierTwoDestinationIds: tied.map((d) => d.id).join(',') }),
     })
     setSettings((s) => ({ ...s, tierTwoOpen: true }))
+    await reloadTierTwoStats()
+    setEnablingTierTwo(false)
+  }
+
+  async function setTierTwoEnabled(enabled: boolean) {
+    if (!enabled && settings.tierTwoOpen && !confirm('Switch off the tiebreaker? Round 2 is live and will be closed for participants.')) return
+    setEnablingTierTwo(true)
+    await fetch('/api/admin/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tierTwoEnabled: enabled }),
+    })
+    setSettings((s) => ({ ...s, tierTwoEnabled: enabled, tierTwoOpen: enabled ? s.tierTwoOpen : false }))
     await reloadTierTwoStats()
     setEnablingTierTwo(false)
   }
@@ -220,16 +234,32 @@ export default function AdminDashboard() {
                 <h2 className="text-lg font-display font-bold text-slate-800 flex items-center gap-2">
                   <span>⚔️</span> Level 2 Tiebreaker
                 </h2>
-                <p className="text-slate-500 text-xs mt-0.5">Activate when two destinations have the same top vote count</p>
+                <p className="text-slate-500 text-xs mt-0.5">
+                  {settings.tierTwoEnabled ? 'Activate when two destinations have the same top vote count' : 'Switched off. Turn on to allow a Round 2 tiebreaker for this trip'}
+                </p>
               </div>
-              {settings.tierTwoOpen && (
-                <span className="text-xs bg-violet-100 text-violet-700 font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-500 inline-block animate-pulse" />
-                  Live
-                </span>
-              )}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {settings.tierTwoOpen && (
+                  <span className="text-xs bg-violet-100 text-violet-700 font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-500 inline-block animate-pulse" />
+                    Live
+                  </span>
+                )}
+                <button
+                  onClick={() => setTierTwoEnabled(!settings.tierTwoEnabled)}
+                  disabled={enablingTierTwo}
+                  title={settings.tierTwoEnabled ? 'Switch off the tiebreaker' : 'Switch on the tiebreaker'}
+                  aria-label="Level 2 tiebreaker on/off"
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    settings.tierTwoEnabled ? 'bg-violet-500' : 'bg-slate-300'
+                  } ${enablingTierTwo ? 'opacity-50' : ''}`}
+                >
+                  <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-200 ${settings.tierTwoEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
             </div>
 
+            {settings.tierTwoEnabled && (
             <div className="p-5 space-y-4">
               {/* Tie detection status */}
               {!settings.tierTwoOpen ? (
@@ -379,6 +409,7 @@ export default function AdminDashboard() {
                 )}
               </div>
             </div>
+            )}
           </div>
         )
       })()}

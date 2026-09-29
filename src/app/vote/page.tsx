@@ -374,7 +374,7 @@ export default function VotePage() {
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm sm:text-base leading-tight">Your votes are submitted!</p>
               <p className="text-white/60 text-xs mt-0.5">
-                {tierTwoLive ? 'Round 2 is live — Round 1 votes are now locked. 🔒' : 'Changed your mind? You can still update your choices.'}
+                {tierTwoLive ? 'Round 2 is live — Round 1 votes are now locked. 🔒' : 'Changed your mind? You can still edit your votes until the organiser closes voting. After that, they are final. 🔒'}
               </p>
             </div>
             {!tierTwoLive && (
@@ -443,7 +443,9 @@ export default function VotePage() {
         {!votingOpen && (
           <div className="glass-card px-4 py-3 text-center mb-5 flex items-center justify-center gap-2 text-slate-700 font-semibold text-sm sm:text-base">
             <span>{user?.trip?.status === 'past' ? '📜' : '🔒'}</span>
-            {user?.trip?.status === 'past' ? 'This is a past trip — voting has ended.' : 'Voting is now closed.'}{' '}
+            {user?.trip?.status === 'past'
+              ? 'This is a past trip — voting has ended.'
+              : (user?.votesUsed ?? 0) > 0 ? 'Voting is now closed — your votes are final.' : 'Voting is now closed.'}{' '}
             {showResults ? <Link href="/results" className="text-sky-600 hover:underline ml-1">View results →</Link> : ' Results coming soon!'}
           </div>
         )}

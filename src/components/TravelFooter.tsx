@@ -1,14 +1,20 @@
 'use client'
 import { useState, useEffect } from 'react'
 
-const QUOTES = [
-  { text: "You only live once... and you're spending it NOT at a resort? Bold choice. 🤔", emoji: "😬" },
-  { text: "Life is short. Your to-do list is long. Ignore both and just go. 🏃", emoji: "💨" },
-  { text: "Yes you'll spend money. Yes it'll hurt. Yes the memories will be priceless. The math checks out. 🧮", emoji: "💸" },
-  { text: "U won't 发达 if u skip this trip. That's literally science. 🧪", emoji: "📊" },
-  { text: "Your future self is begging you. Your future wallet is crying. Listen to your future self. 🙏", emoji: "😭" },
-  { text: "Regret is free. This trip is not. But regret is way more expensive long-term. Trust. 💀", emoji: "🤑" },
-  { text: "Studies show that people who go on trips are 100% more fun at parties. (TC Yap, 2026) 📚", emoji: "🎉" },
+// Alternates Chinese / English. Chinese quotes carry their own 「」 marks.
+const QUOTES: { text: string; emoji: string; lang: 'zh' | 'en' }[] = [
+  { lang: 'zh', emoji: '🦴', text: '「年轻的时候不出去玩，难道等腰椎间盘突出才开始环游世界？」' },
+  { lang: 'en', emoji: '👴', text: "Go now before we get old. By then it won't be the money we're short of, it'll be the energy." },
+  { lang: 'zh', emoji: '😩', text: '「人生已经够苦了，连旅行都不去，你到底想怎样？」' },
+  { lang: 'en', emoji: '🎂', text: "Think about it: we're all 30 now. How many more trips can this group actually take together?" },
+  { lang: 'zh', emoji: '⏳', text: '「我们总说‘以后再去’，但人生最容易消失的，就是这个‘以后’。」' },
+  { lang: 'en', emoji: '🫂', text: "What makes a trip precious isn't where we went. It's that back then, we were all still together." },
+  { lang: 'zh', emoji: '🏡', text: '「以后大家可能都有家庭、有工作、有自己的生活，能像现在这样一起出发的机会，只会越来越少。」' },
+  { lang: 'en', emoji: '⚖️', text: "Life is funny: young, you're short on money; old, you're short on time. Right now we've got a bit of both." },
+  { lang: 'zh', emoji: '🔢', text: '「我们总以为以后还有很多次，但其实，从某一次旅行开始，我们就已经在倒数了。」' },
+  { lang: 'en', emoji: '💸', text: "Don't worry about spending money. Everything goes back to zero in the end anyway." },
+  { lang: 'zh', emoji: '🎉', text: '「人生苦短，及时行乐。至于钱的问题，回来再烦。」' },
+  { lang: 'en', emoji: '🙃', text: "Sure, you can skip it. Stability matters most, after all: stably going to work, stably going home, stably regretting it." },
 ]
 
 export default function TravelFooter() {
@@ -22,7 +28,7 @@ export default function TravelFooter() {
         setIdx((i) => (i + 1) % QUOTES.length)
         setVisible(true)
       }, 400)
-    }, 5000)
+    }, 6000)
     return () => clearInterval(interval)
   }, [])
 
@@ -36,8 +42,8 @@ export default function TravelFooter() {
         style={{ opacity: visible ? 1 : 0 }}
       >
         <div className="text-3xl mb-2">{quote.emoji}</div>
-        <p className="text-white/70 text-sm italic leading-relaxed">
-          &ldquo;{quote.text}&rdquo;
+        <p className={`text-white/70 text-sm leading-relaxed ${quote.lang === 'en' ? 'italic' : 'tracking-wide'}`}>
+          {quote.lang === 'en' ? <>&ldquo;{quote.text}&rdquo;</> : quote.text}
         </p>
         <div className="flex items-center justify-center gap-2 mt-3">
           {QUOTES.map((_, i) => (

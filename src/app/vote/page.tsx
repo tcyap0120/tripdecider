@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import TravelFooter from '@/components/TravelFooter'
+import WelcomePopup from '@/components/WelcomePopup'
 
 interface MediaItem {
   id: string
@@ -35,6 +36,7 @@ interface UserInfo {
   votesUsed?: number
   remainingVotes?: number
   trip?: { id: string; name: string; status: 'active' | 'past' } | null
+  welcomeSeen?: boolean
 }
 
 interface AppSettings {
@@ -90,6 +92,7 @@ export default function VotePage() {
   const [editMode, setEditMode] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortKey>('default')
+  const [showWelcome, setShowWelcome] = useState(false)
 
   // Discussion state
   const [messages, setMessages] = useState<Message[]>([])
@@ -120,7 +123,14 @@ export default function VotePage() {
       setDestinations(dests)
       setPending(new Set(dests.filter((d: Destination) => d.hasVoted).map((d: Destination) => d.id)))
     }
-    if (settingsRes.ok) setAppSettings(await settingsRes.json())
+    if (settingsRes.ok) {
+      const s = await settingsRes.json()
+      setAppSettings(s)
+      // First visit to this trip while voting is open and before voting: show the welcome popup
+      if (meData.welcomeSeen === false && s.votingOpen && (meData.votesUsed ?? 0) === 0 && (meData.voteCount ?? 0) > 0) {
+        setShowWelcome(true)
+      }
+    }
     setLoading(false)
   }, [router])
 
@@ -205,6 +215,11 @@ export default function VotePage() {
     })
     if (res.ok) { setCommentText(''); setCommentingId(null); await loadMessages() }
     setSendingComment(false)
+  }
+
+  function closeWelcome() {
+    setShowWelcome(false)
+    fetch('/api/trips/welcome', { method: 'POST' })
   }
 
   async function handleLogout() {
@@ -841,6 +856,15 @@ export default function VotePage() {
       )}
 
       <TravelFooter />
+
+      {showWelcome && user && (
+        <WelcomePopup
+          name={user.displayName || user.username || ''}
+          tripName={user.trip?.name || 'the trip'}
+          voteCount={user.voteCount ?? 0}
+          onClose={closeWelcome}
+        />
+      )}
     </div>
   )
 }

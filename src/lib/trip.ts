@@ -132,7 +132,13 @@ export async function getParticipantTrip() {
     if (!membership) return null
   }
 
-  return { session, participantId: session.userId, trip: membership.trip, voteCount: membership.voteCount }
+  return {
+    session,
+    participantId: session.userId,
+    trip: membership.trip,
+    voteCount: membership.voteCount,
+    welcomeSeen: membership.welcomeSeenAt !== null,
+  }
 }
 
 /**

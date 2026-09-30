@@ -10,3 +10,4 @@ prisma/migrations/
 
 # local media, never commit
 *.mp3
+*.tsbuildinfo

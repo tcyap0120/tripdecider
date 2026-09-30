@@ -18,6 +18,18 @@ export async function GET() {
   })
   const byId = new Map(withCounts.map((t) => [t.id, t]))
 
+  // Per-trip results visibility, and whether this participant has seen the "results are ready" popup
+  const tripIds = trips.map((t) => t.id)
+  const [resultRows, memberships] = await Promise.all([
+    prisma.settings.findMany({ where: { key: { in: tripIds.map((id) => `${id}:resultsPublic`) } } }),
+    prisma.tripParticipant.findMany({
+      where: { participantId: ctx.participantId, tripId: { in: tripIds } },
+      select: { tripId: true, resultsSeenAt: true },
+    }),
+  ])
+  const resultsPublic = new Set(resultRows.filter((r) => r.value === 'true').map((r) => r.key.split(':')[0]))
+  const resultsSeen = new Set(memberships.filter((m) => m.resultsSeenAt).map((m) => m.tripId))
+
   return NextResponse.json({
     currentTripId: ctx.trip.id,
     trips: trips.map((t) => ({
@@ -29,6 +41,8 @@ export async function GET() {
       destinationCount: byId.get(t.id)?._count.destinations ?? 0,
       participantCount: byId.get(t.id)?._count.participants ?? 0,
       coverPhoto: byId.get(t.id)?.destinations[0]?.photoUrl ?? null,
+      resultsPublic: resultsPublic.has(t.id),
+      resultsSeen: resultsSeen.has(t.id),
     })),
   })
 }

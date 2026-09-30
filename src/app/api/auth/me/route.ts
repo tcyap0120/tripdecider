@@ -33,5 +33,6 @@ export async function GET() {
     remainingVotes: voteCount - votesUsed,
     trip: ctx ? { id: ctx.trip.id, name: ctx.trip.name, status: ctx.trip.status } : null,
     welcomeSeen: ctx?.welcomeSeen ?? true,
+    resultsSeen: ctx?.resultsSeen ?? true,
   })
 }

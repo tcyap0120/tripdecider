@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TravelFooter from '@/components/TravelFooter'
+import ResultsReadyPopup from '@/components/ResultsReadyPopup'
 
 interface Trip {
   id: string
@@ -12,6 +13,8 @@ interface Trip {
   destinationCount: number
   participantCount: number
   coverPhoto: string | null
+  resultsPublic: boolean
+  resultsSeen: boolean
 }
 
 export default function TripsPage() {
@@ -21,6 +24,7 @@ export default function TripsPage() {
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(true)
   const [opening, setOpening] = useState<string | null>(null)
+  const [resultsTrip, setResultsTrip] = useState<Trip | null>(null)
 
   useEffect(() => {
     Promise.all([fetch('/api/auth/me'), fetch('/api/trips')]).then(async ([meRes, tripsRes]) => {
@@ -29,20 +33,35 @@ export default function TripsPage() {
       setDisplayName(me.displayName || me.username)
       const data = await tripsRes.json()
       setTrips(data.trips ?? [])
+      // First visit since the organiser revealed the results for an upcoming trip
+      setResultsTrip((data.trips ?? []).find((t: Trip) => t.status !== 'past' && t.resultsPublic && !t.resultsSeen) ?? null)
       setCurrentTripId(data.currentTripId)
       setLoading(false)
     })
   }, [router])
 
-  async function openTrip(tripId: string) {
+  async function openTrip(tripId: string, dest = '/vote') {
     setOpening(tripId)
     const res = await fetch('/api/trips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tripId }),
     })
-    if (res.ok) router.push('/vote')
+    if (res.ok) router.push(dest)
     else setOpening(null)
+  }
+
+  function dismissResults(view: boolean) {
+    if (!resultsTrip) return
+    const trip = resultsTrip
+    setResultsTrip(null)
+    setTrips((ts) => ts.map((t) => (t.id === trip.id ? { ...t, resultsSeen: true } : t)))
+    fetch('/api/trips/results-seen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tripId: trip.id }),
+    })
+    if (view) openTrip(trip.id, '/results')
   }
 
   async function handleLogout() {
@@ -66,9 +85,10 @@ export default function TripsPage() {
 
   function TripCard({ trip, idx }: { trip: Trip; idx: number }) {
     const isPast = trip.status === 'past'
+    const resultsOut = !isPast && trip.resultsPublic
     return (
       <button
-        onClick={() => openTrip(trip.id)}
+        onClick={() => openTrip(trip.id, resultsOut ? '/results' : '/vote')}
         disabled={opening !== null}
         style={{ animationDelay: `${idx * 0.08}s` }}
         className={`animate-pop-in group text-left w-full overflow-hidden rounded-2xl bg-white shadow-lg transition-shadow hover:shadow-2xl active:scale-[0.99] ${
@@ -83,9 +103,9 @@ export default function TripsPage() {
             <div className="w-full h-full flex items-center justify-center text-5xl">{isPast ? '📜' : '✈️'}</div>
           )}
           <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full shadow ${
-            isPast ? 'bg-slate-800/70 text-white' : 'bg-emerald-400 text-emerald-950'
+            isPast ? 'bg-slate-800/70 text-white' : resultsOut ? 'bg-amber-400 text-amber-950' : 'bg-emerald-400 text-emerald-950'
           }`}>
-            {isPast ? '📜 Past trip' : '🟢 Voting'}
+            {isPast ? '📜 Past trip' : resultsOut ? '🏆 Results out' : '🟢 Voting'}
           </span>
         </div>
         <div className="p-4">
@@ -94,7 +114,7 @@ export default function TripsPage() {
           <div className="flex items-center justify-between mt-3 text-xs text-slate-400">
             <span>🗺️ {trip.destinationCount} destination{trip.destinationCount !== 1 ? 's' : ''} · 👥 {trip.participantCount}</span>
             <span className="font-semibold text-sky-600 group-hover:translate-x-0.5 transition-transform">
-              {opening === trip.id ? 'Opening...' : isPast ? 'View →' : 'Open →'}
+              {opening === trip.id ? 'Opening...' : isPast ? 'View →' : resultsOut ? 'See results →' : 'Open →'}
             </span>
           </div>
         </div>
@@ -157,6 +177,15 @@ export default function TripsPage() {
       </main>
 
       <TravelFooter />
+
+      {resultsTrip && (
+        <ResultsReadyPopup
+          name={displayName}
+          tripName={resultsTrip.name}
+          onView={() => dismissResults(true)}
+          onClose={() => dismissResults(false)}
+        />
+      )}
     </div>
   )
 }

@@ -26,6 +26,7 @@ model TripParticipant {
   participantId String
   voteCount     Int         @default(1)
   welcomeSeenAt DateTime? // first-visit welcome popup dismissed
+  resultsSeenAt DateTime? // "results are ready" popup dismissed
   createdAt     DateTime    @default(now())
   trip          Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
   participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)

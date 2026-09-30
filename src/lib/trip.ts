@@ -138,6 +138,7 @@ export async function getParticipantTrip() {
     trip: membership.trip,
     voteCount: membership.voteCount,
     welcomeSeen: membership.welcomeSeenAt !== null,
+    resultsSeen: membership.resultsSeenAt !== null,
   }
 }
 

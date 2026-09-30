@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import TravelFooter from '@/components/TravelFooter'
 import WelcomePopup from '@/components/WelcomePopup'
+import ResultsReadyPopup from '@/components/ResultsReadyPopup'
 import { ConfettiRain, SparkleBurst } from '@/components/Celebrate'
 
 interface MediaItem {
@@ -39,6 +40,7 @@ interface UserInfo {
   remainingVotes?: number
   trip?: { id: string; name: string; status: 'active' | 'past' } | null
   welcomeSeen?: boolean
+  resultsSeen?: boolean
 }
 
 interface AppSettings {
@@ -95,6 +97,7 @@ export default function VotePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortKey>('default')
   const [showWelcome, setShowWelcome] = useState(false)
+  const [showResultsReady, setShowResultsReady] = useState(false)
   // Little celebrations: sparkle on select, confetti on submit
   const [burst, setBurst] = useState<{ id: string; key: number } | null>(null)
   const [confettiKey, setConfettiKey] = useState(0)
@@ -137,6 +140,9 @@ export default function VotePage() {
       // First visit to this trip while voting is open and before voting: show the welcome popup
       if (meData.welcomeSeen === false && s.votingOpen && (meData.votesUsed ?? 0) === 0 && (meData.voteCount ?? 0) > 0) {
         setShowWelcome(true)
+      } else if (meData.resultsSeen === false && s.resultsPublic && meData.trip.status !== 'past') {
+        // First visit since the organiser revealed the results
+        setShowResultsReady(true)
       }
     }
     setLoading(false)
@@ -235,6 +241,12 @@ export default function VotePage() {
     fetch('/api/trips/welcome', { method: 'POST' })
   }
 
+  function closeResultsReady(view: boolean) {
+    setShowResultsReady(false)
+    fetch('/api/trips/results-seen', { method: 'POST' })
+    if (view) router.push('/results')
+  }
+
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
@@ -243,6 +255,8 @@ export default function VotePage() {
   const totalVotes = destinations.reduce((s, d) => s + d.voteCount, 0)
   const sortedByVotes = [...destinations].sort((a, b) => b.voteCount - a.voteCount)
   const topDest = sortedByVotes[0]
+  // Only call it "Round 1" when there is a tie at the top (i.e. a tiebreaker round is on the cards)
+  const topTied = !!topDest && topDest.voteCount > 0 && sortedByVotes.filter((d) => d.voteCount === topDest.voteCount).length > 1
   // Medal rank by votes, independent of how the list is sorted
   const voteRank = new Map(sortedByVotes.filter((d) => d.voteCount > 0).map((d, i) => [d.id, i]))
   const visibleDestinations = sortDestinations(destinations, sortBy)
@@ -484,8 +498,8 @@ export default function VotePage() {
         {/* Results public banner */}
         {showResults && (
           <div className="bg-amber-400/20 backdrop-blur border border-amber-300/40 rounded-2xl px-4 py-3 text-center mb-5 flex items-center justify-center gap-2 text-white font-semibold text-sm sm:text-base">
-            <span>🏆</span> Results are now live!{' '}
-            <Link href="/results" className="underline hover:text-amber-200 ml-1">See Round 1 Full Results →</Link>
+            <span>🏆</span> The results are out!{' '}
+            <Link href="/results" className="underline hover:text-amber-200 ml-1">{topTied || tierTwoLive ? 'See Round 1 Full Results →' : 'See Full Results →'}</Link>
           </div>
         )}
 
@@ -891,6 +905,15 @@ export default function VotePage() {
           tripName={user.trip?.name || 'the trip'}
           voteCount={user.voteCount ?? 0}
           onClose={closeWelcome}
+        />
+      )}
+
+      {showResultsReady && user && (
+        <ResultsReadyPopup
+          name={user.displayName || user.username || ''}
+          tripName={user.trip?.name || 'the trip'}
+          onView={() => closeResultsReady(true)}
+          onClose={() => closeResultsReady(false)}
         />
       )}
     </div>
